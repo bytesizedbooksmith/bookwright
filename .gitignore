@@ -4,3 +4,6 @@ output/
 *.log
 .DS_Store
 .tmp/
+
+# scratch / throwaway test files
+_*

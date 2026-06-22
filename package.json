@@ -1,12 +1,12 @@
 {
-  "name": "epub-maker",
-  "version": "0.1.0",
+  "name": "bookwright",
+  "version": "1.1.0",
   "private": true,
-  "description": "Turn Markdown manuscripts into publish-ready EPUB, DOCX, Markdown and PDF. Local web app with live preview.",
+  "description": "Bookwright — turn Markdown manuscripts into publish-ready ebooks and print PDFs (plus DOCX & Markdown). Local web app with live preview.",
   "type": "module",
   "scripts": {
     "dev": "concurrently -k -n server,web -c blue,magenta \"npm:dev:server\" \"npm:dev:web\"",
-    "dev:server": "cross-env EPUBMAKER_DEV=1 tsx watch server/index.ts",
+    "dev:server": "cross-env BOOKWRIGHT_DEV=1 tsx watch server/index.ts",
     "dev:web": "vite",
     "build": "vite build",
     "start": "npm run build && tsx server/index.ts",

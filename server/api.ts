@@ -104,7 +104,7 @@ function applyTypography(book: { typography: any }, req: Request): void {
 }
 
 export function registerApi(app: Express): void {
-  app.get("/api/health", (_req, res) => res.json({ ok: true, name: "epub-maker", version: "0.2.0" }));
+  app.get("/api/health", (_req, res) => res.json({ ok: true, name: "bookwright", version: "1.1.0" }));
   app.get("/api/themes", (_req, res) => res.json(themeList()));
   app.get("/api/presets", (_req, res) => res.json(Object.values(PRESETS)));
   app.get("/api/matter-types", (_req, res) => res.json(MATTER_TYPES));

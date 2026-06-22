@@ -141,9 +141,9 @@ export default function App() {
       <aside className="flex w-[390px] flex-shrink-0 flex-col border-r border-slate-200 bg-white">
         <header className="border-b border-slate-200 px-5 py-4">
           <h1 className="text-lg font-bold text-slate-800">
-            EPUB Maker <span className="text-emerald-600">📖</span>
+            Bookwright <span className="text-emerald-600">📖</span>
           </h1>
-          <p className="text-xs text-slate-500">Markdown → EPUB · DOCX · Markdown · PDF</p>
+          <p className="text-xs text-slate-500">Markdown → ebook · print · DOCX · PDF</p>
         </header>
 
         <div className="flex-1 overflow-y-auto px-5">

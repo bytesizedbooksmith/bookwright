@@ -25,8 +25,8 @@ export function printCss(theme: string): string {
 }
 
 /** Create a fresh temp working directory for one render. Caller cleans up. */
-export async function makeTempDir(prefix = "epubmaker-"): Promise<string> {
-  const base = path.join(os.tmpdir(), "epub-maker");
+export async function makeTempDir(prefix = "bookwright-"): Promise<string> {
+  const base = path.join(os.tmpdir(), "bookwright");
   await fs.mkdir(base, { recursive: true });
   return fs.mkdtemp(path.join(base, prefix));
 }

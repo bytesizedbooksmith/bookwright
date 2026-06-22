@@ -1,5 +1,5 @@
 /* ============================================================
-   EPUB Maker — base layout (theme-agnostic structure)
+   Bookwright — base layout (theme-agnostic structure)
    Shared by every theme; loaded before the theme's own CSS.
    Works in both the live preview and inside the EPUB.
    ============================================================ */

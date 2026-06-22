@@ -1,5 +1,5 @@
 /* ============================================================
-   EPUB Maker — print base (paged media)
+   Bookwright — print base (paged media)
    Injected only for the print PDF. Sits on top of base.css +
    the theme CSS. The dynamic @page rules (trim, margins,
    running heads) are added separately per render.
