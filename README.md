@@ -1,7 +1,8 @@
 # Bookwright 📖
 
-Turn your Markdown manuscripts into publish-ready books — a Windows-friendly,
-self-owned alternative to Vellum (Mac-only) and Atticus.
+**A Markdown book formatter for indie authors.** Turn your manuscripts into
+publish-ready books — a Windows-friendly, self-owned alternative to Vellum
+(Mac-only) and Atticus.
 
 It runs as a **local web app** in your browser (no internet required) with a
 **live preview**. From one set of Markdown files it produces:
