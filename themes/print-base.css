@@ -1,0 +1,101 @@
+/* ============================================================
+   EPUB Maker — print base (paged media)
+   Injected only for the print PDF. Sits on top of base.css +
+   the theme CSS. The dynamic @page rules (trim, margins,
+   running heads) are added separately per render.
+   ============================================================ */
+
+/* Use the full content area inside the @page margins. */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+main.book {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Print color: solid black text on white. */
+body {
+  color: #000;
+  font-size: 11pt;
+  line-height: 1.4;
+}
+
+/* Each chapter / front-matter section starts on a fresh page (the dynamic
+   CSS may upgrade chapters to start on a recto). */
+section.level1 {
+  break-before: page;
+}
+
+/* Chapter openings drop down the page, as in a printed book. */
+section.chapter > h1 {
+  margin-top: 1.6in;
+}
+
+/* Avoid awkward breaks. */
+h1,
+h2,
+h3 {
+  break-after: avoid;
+}
+.scene-break {
+  break-inside: avoid;
+}
+img {
+  max-width: 100%;
+}
+
+/* Front matter shouldn't push down like chapters. */
+section.titlepage > h1,
+section.copyright > h1,
+section.frontmatter > h1 {
+  margin-top: 0;
+}
+section.titlepage {
+  padding-top: 1.2in;
+}
+
+/* ---- Printed table of contents (PDF only) ----
+   Entries link to section anchors; Paged.js fills the page number with
+   target-counter, with a dotted leader between title and number. */
+section.toc > h1 {
+  margin-top: 0;
+  text-align: center;
+  margin-bottom: 1.4em;
+}
+nav.toc-print ol {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 88%;
+}
+nav.toc-print li {
+  margin: 0 0 0.6em;
+}
+nav.toc-print a {
+  display: flex;
+  align-items: baseline;
+  text-decoration: none;
+  color: inherit;
+}
+nav.toc-print .toc-t {
+  order: 1;
+}
+/* Dotted leader: a flex-growing line between the title and the page number
+   (CSS leader() isn't supported in Chromium, so we draw it with a border). */
+nav.toc-print a::after {
+  content: "";
+  order: 2;
+  flex: 1 1 auto;
+  margin: 0 0.4em;
+  border-bottom: 1px dotted currentColor;
+  transform: translateY(-0.18em);
+}
+/* Page number — injected from the paginated layout in render-print.ts. */
+nav.toc-print .toc-pageno {
+  order: 3;
+  white-space: nowrap;
+}

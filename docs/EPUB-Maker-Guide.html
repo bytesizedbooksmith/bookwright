@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EPUB Maker — User Guide (v1.1)</title>
+    <style>
+      :root {
+        --ink: #1f2933;
+        --muted: #5b6b7b;
+        --accent: #0f7a5e;
+        --accent-soft: #e7f4ef;
+        --line: #e3e8ee;
+        --code-bg: #f5f7fa;
+        --warn-bg: #fff8e6;
+        --warn-line: #f1d68a;
+        --tip-bg: #eef7f3;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: #fbfcfd;
+        font: 16px/1.65 "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif;
+      }
+      a { color: var(--accent); }
+      code, pre, kbd {
+        font-family: "Cascadia Code", "Consolas", ui-monospace, Menlo, monospace;
+        font-size: 0.9em;
+      }
+      code { background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 4px; }
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow: auto;
+        line-height: 1.5;
+      }
+      pre code { background: none; padding: 0; }
+      kbd {
+        background: #fff;
+        border: 1px solid #cdd5df;
+        border-bottom-width: 2px;
+        border-radius: 5px;
+        padding: 0.05em 0.45em;
+      }
+
+      .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+      .layout { display: grid; grid-template-columns: 250px 1fr; gap: 48px; align-items: start; }
+
+      header.hero {
+        background: linear-gradient(135deg, #0f7a5e, #0b5e49);
+        color: #fff;
+        padding: 40px 0 34px;
+      }
+      header.hero h1 { margin: 0 0 6px; font-size: 2.1rem; letter-spacing: -0.01em; }
+      header.hero p { margin: 4px 0 0; color: #d8efe7; max-width: 60ch; }
+      .badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        color: #fff;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 999px;
+        margin-bottom: 14px;
+      }
+
+      nav.toc {
+        position: sticky;
+        top: 18px;
+        align-self: start;
+        font-size: 0.9rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        background: #fff;
+        max-height: calc(100vh - 36px);
+        overflow: auto;
+      }
+      nav.toc strong { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 10px 0 6px; }
+      nav.toc a { display: block; padding: 3px 0; color: var(--ink); text-decoration: none; border-radius: 4px; }
+      nav.toc a:hover { color: var(--accent); }
+
+      main { min-width: 0; padding-bottom: 80px; }
+      main section { padding-top: 14px; }
+      h2 { font-size: 1.5rem; margin: 38px 0 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+      h2:first-of-type { border-top: 0; }
+      h3 { font-size: 1.15rem; margin: 26px 0 6px; }
+      h4 { font-size: 1rem; margin: 18px 0 4px; }
+      .toplink { font-size: 0.8rem; color: var(--muted); text-decoration: none; margin-left: 10px; font-weight: 400; }
+      .toplink:hover { color: var(--accent); }
+
+      table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 0.94rem; }
+      th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+      th { background: var(--accent-soft); }
+
+      .callout { border-radius: 8px; padding: 12px 16px; margin: 16px 0; border: 1px solid var(--line); }
+      .callout.note { background: #fff; }
+      .callout.tip { background: var(--tip-bg); border-color: #bfe3d6; }
+      .callout.warn { background: var(--warn-bg); border-color: var(--warn-line); }
+      .callout p:first-child { margin-top: 0; }
+      .callout p:last-child { margin-bottom: 0; }
+      .callout .label { font-weight: 700; }
+
+      .pill { display:inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 1px 9px; font-size: 0.8rem; font-weight: 600; }
+      footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; padding: 24px 0 60px; }
+
+      @media (max-width: 860px) {
+        .layout { grid-template-columns: 1fr; gap: 8px; }
+        nav.toc { position: static; max-height: none; }
+      }
+    </style>
+  </head>
+  <body id="top">
+    <header class="hero">
+      <div class="wrap">
+        <span class="badge">Version 1.1 · Windows</span>
+        <h1>EPUB Maker — User Guide</h1>
+        <p>
+          A local, self-owned tool that turns your Markdown manuscripts into publish-ready
+          ebooks and print PDFs — a Windows-friendly alternative to Vellum and Atticus.
+        </p>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="layout">
+        <nav class="toc" aria-label="Contents">
+          <strong>Getting started</strong>
+          <a href="#about">1 · What it is</a>
+          <a href="#requirements">2 · Requirements</a>
+          <a href="#install">3 · Install &amp; launch</a>
+          <a href="#tour">4 · Interface tour</a>
+          <strong>Your book</strong>
+          <a href="#loading">5 · Loading a book</a>
+          <a href="#structure">6 · Folder &amp; book.yaml</a>
+          <a href="#markdown">7 · Markdown basics</a>
+          <a href="#matter">8 · Front &amp; back matter</a>
+          <a href="#documents">9 · Embedded documents</a>
+          <strong>Look &amp; feel</strong>
+          <a href="#themes">10 · Themes</a>
+          <a href="#fonts">11 · Custom fonts</a>
+          <a href="#typography">12 · Typography</a>
+          <strong>Preview &amp; output</strong>
+          <a href="#preview">13 · Previewing</a>
+          <a href="#ebook">14 · Export ebook</a>
+          <a href="#print">15 · Print book (PDF)</a>
+          <a href="#publish">16 · Where to publish</a>
+          <strong>Reference</strong>
+          <a href="#troubleshooting">17 · Troubleshooting</a>
+          <a href="#roadmap">18 · Roadmap</a>
+          <a href="#porting">19 · Other operating systems</a>
+          <a href="#credits">20 · Credits &amp; licenses</a>
+        </nav>
+
+        <main>
+          <div class="callout warn">
+            <p>
+              <span class="label">This is Version 1.1, and we're still building.</span> EPUB Maker
+              already produces real, publishable files, but it's an early release: expect rough
+              edges, and expect features and screens to change as development continues. This guide
+              describes the Windows version. If you use macOS or Linux, see
+              <a href="#porting">§19 · Other operating systems</a>.
+            </p>
+          </div>
+
+          <div class="callout tip">
+            <p><span class="label">New in 1.1:</span></p>
+            <ul>
+              <li><strong>Printed Table of Contents</strong> in the print PDF — a real Contents page with page numbers (§15).</li>
+              <li><strong>Page numbers restart at Chapter&nbsp;1</strong>; front &amp; back matter carry no running head or page number.</li>
+              <li><strong>Letter (8.5&nbsp;×&nbsp;11&nbsp;in)</strong> trim size added for print.</li>
+              <li><strong>Title page</strong> now shows your <em>series</em> line and matches the preview in the EPUB; front matter is ordered Title → Copyright → Contents → … (§14).</li>
+              <li>Embedded fonts fixed so a handwriting <code>letter</code>/<code>journal</code> renders on Kindle and Adobe Digital Editions.</li>
+            </ul>
+          </div>
+
+          <section id="about">
+            <h2>1 · What it is <a class="toplink" href="#top">↑ top</a></h2>
+            <p>
+              EPUB Maker is a small app that runs <em>locally on your own PC</em> (in your web
+              browser, with no internet required). You point it at your manuscript written in
+              <strong>Markdown</strong>, choose a look, and it produces publish-ready files:
+            </p>
+            <ul>
+              <li><strong>EPUB</strong> for Amazon KDP, Curios, BookFunnel (ARCs/promos), and your own website</li>
+              <li><strong>Print-ready PDF</strong> for paperback &amp; hardback (KDP / IngramSpark trim sizes)</li>
+              <li><strong>Word (.docx)</strong>, <strong>compiled Markdown</strong>, and a <strong>reading PDF</strong> for reuse elsewhere</li>
+            </ul>
+            <p>
+              Everything is generated from one set of source files and one styling system, so the
+              live preview always matches what you export. You own the tool and your files — nothing
+              is uploaded anywhere.
+            </p>
+          </section>
+
+          <section id="requirements">
+            <h2>2 · Requirements <a class="toplink" href="#top">↑ top</a></h2>
+            <table>
+              <tr><th>Tool</th><th>Needed for</th><th>Notes</th></tr>
+              <tr><td><strong>Pandoc 3.x</strong></td><td>EPUB / DOCX / HTML generation</td><td>Required. Download from <a href="https://pandoc.org">pandoc.org</a>.</td></tr>
+              <tr><td><strong>Node.js 20+</strong></td><td>Running the app</td><td>Required. Download from <a href="https://nodejs.org">nodejs.org</a>.</td></tr>
+              <tr><td><strong>Chromium</strong></td><td>PDF &amp; print output</td><td>Downloaded automatically the first time you install (~150&nbsp;MB, once).</td></tr>
+              <tr><td><strong>Java</strong></td><td>Full EPUB validation</td><td>Optional. Without it, the app runs built-in checks instead.</td></tr>
+            </table>
+            <div class="callout note">
+              <p><span class="label">Cost:</span> all of the above are free and open source. EPUB Maker itself is yours to run and modify.</p>
+            </div>
+          </section>
+
+          <section id="install">
+            <h2>3 · Install &amp; launch <a class="toplink" href="#top">↑ top</a></h2>
+            <p><strong>The easy way (Windows):</strong> double-click <code>start.bat</code>. The first run installs
+              dependencies (a few minutes); after that it builds the app and opens it in your browser.</p>
+            <p><strong>From a terminal:</strong></p>
+            <pre><code>npm install     # first time only
+npm start       # builds the UI, starts the server, opens your browser</code></pre>
+            <p>The app opens at <code>http://localhost:4242</code>. To stop it, close the terminal window
+              (or press <kbd>Ctrl</kbd>+<kbd>C</kbd>).</p>
+          </section>
+
+          <section id="tour">
+            <h2>4 · Interface tour <a class="toplink" href="#top">↑ top</a></h2>
+            <p>The window has two halves:</p>
+            <ul>
+              <li><strong>Left sidebar</strong> — collapsible sections for loading your book, choosing a theme,
+                editing details, managing front/back matter, adjusting typography, and exporting. Click any
+                section heading to fold it away.</li>
+              <li><strong>Right preview</strong> — a live, book-like view that updates as you make changes. A bar
+                across the top lets you preview as different devices, or switch to the paginated
+                <strong>🖨 Print</strong> view.</li>
+            </ul>
+          </section>
+
+          <section id="loading">
+            <h2>5 · Loading a book <a class="toplink" href="#top">↑ top</a></h2>
+            <p>Under <strong>Manuscript</strong> you have a few options:</p>
+            <table>
+              <tr><th>Option</th><th>What it does</th><th>Best for</th></tr>
+              <tr><td><strong>📁 Choose folder…</strong></td><td>Opens the Windows folder picker and reads your book folder straight from disk.</td><td>The real workflow — editing files and seeing the result.</td></tr>
+              <tr><td>Paste a path + <strong>Open</strong></td><td>Same as above, but you type/paste the folder path.</td><td>When you already know the path.</td></tr>
+              <tr><td><strong>Open book folder…</strong> / drag-drop</td><td>Picks or drops a folder; the app works on a <em>copy</em>.</td><td>Quick one-offs.</td></tr>
+              <tr><td><strong>Open .md file…</strong></td><td>A single Markdown file, split into chapters on each <code># Heading</code>.</td><td>Fast jobs with no front/back matter.</td></tr>
+              <tr><td><strong>load the sample book</strong></td><td>Loads the bundled demo (<em>The Clockwork Garden</em>).</td><td>Trying the app instantly.</td></tr>
+            </table>
+            <div class="callout tip">
+              <p><span class="label">Edit-on-disk:</span> when you open a <em>folder</em>, edits you make to its files in
+                your own editor show up when you click <strong>↻ Reload</strong>. This is the recommended way to work.</p>
+            </div>
+          </section>
+
+          <section id="structure">
+            <h2>6 · Folder &amp; book.yaml <a class="toplink" href="#top">↑ top</a></h2>
+            <p>A book folder looks like this:</p>
+            <pre><code>my-book/
+  book.yaml            ← metadata, theme, and the order of everything
+  cover.png            ← your cover image
+  fonts/               ← (optional) embedded fonts
+  frontmatter/
+    dedication.md
+    epigraph.md
+  chapters/
+    01-the-letter.md
+    02-the-garden.md
+  backmatter/
+    about-the-author.md</code></pre>
+            <p><code>book.yaml</code> is the control file. A full example:</p>
+            <pre><code>title: The Clockwork Garden
+subtitle: A Novel
+author: Eleanor Vance
+series: The Tinkerer's Trilogy
+series_index: 1               # optional — leave blank (or omit) for no "Book N" line
+publisher: Bramblewood Press
+language: en
+isbn: "978-1-7384521-0-6"     # optional — a UUID is generated if omitted
+description: &gt;
+  Back-cover blurb…
+copyright: |
+  Copyright © 2026 Eleanor Vance. All rights reserved.
+cover: cover.png
+theme: decorative              # classic | modern | decorative
+
+frontmatter:                   # "titlepage" &amp; "copyright" are auto-generated
+  - titlepage
+  - copyright
+  - frontmatter/dedication.md
+chapters: chapters             # a folder (filename order) OR a single .md file
+backmatter:
+  - backmatter/about-the-author.md</code></pre>
+            <p>The optional <code>fonts:</code>, <code>styles:</code>, and <code>typography:</code> blocks are covered in
+              <a href="#fonts">§11</a> and <a href="#typography">§12</a>.</p>
+            <div class="callout note">
+              <p><span class="label">No book.yaml?</span> You can just hand over a folder of chapter files. The app uses
+                the folder name as the title and reads the files in order — you can fill in details in the app and
+                <strong>Save details to book.yaml</strong> later.</p>
+            </div>
+          </section>
+
+          <section id="markdown">
+            <h2>7 · Markdown basics <a class="toplink" href="#top">↑ top</a></h2>
+            <table>
+              <tr><th>Element</th><th>How to write it</th></tr>
+              <tr><td>Chapter title</td><td><code># The Letter</code> (a top-level heading)</td></tr>
+              <tr><td>Scene break</td><td>A line of <code>* * *</code> (or <code>***</code>) — becomes the theme's ornament</td></tr>
+              <tr><td>Italic / bold</td><td><code>*italic*</code> · <code>**bold**</code></td></tr>
+              <tr><td>Block quote</td><td><code>&gt; quoted text</code></td></tr>
+            </table>
+            <p>That's all most novels need. Chapters can be one file each (in a <code>chapters/</code> folder, read in
+              filename order — so number them <code>01-</code>, <code>02-</code>…) or one big file split on each <code>#</code> heading.</p>
+          </section>
+
+          <section id="matter">
+            <h2>8 · Front &amp; back matter <a class="toplink" href="#top">↑ top</a></h2>
+            <p>Open a book as a <em>folder</em> and the <strong>Front &amp; back matter</strong> panel lets you build out the
+              book without hand-editing config:</p>
+            <ul>
+              <li><strong>+ Add</strong> from a template — Dedication, Epigraph, Foreword, Preface, Acknowledgments,
+                About the Author, Also By, Newsletter, Sneak Peek, or a Custom section.</li>
+              <li>Each becomes a real Markdown file in your folder's <code>frontmatter/</code> or <code>backmatter/</code> directory.</li>
+              <li><strong>Reorder</strong> with ↑ ↓ and <strong>remove</strong> with ✕ (removing just unlists it; the file stays).</li>
+              <li>Edit the prose in your own editor, then <strong>↻ Reload</strong>.</li>
+            </ul>
+            <p>The <strong>title page</strong> and <strong>copyright page</strong> are generated automatically from your Book Details
+              (title, subtitle, author, series, publisher) — you never type them by hand. A matter file can begin with a small
+              header to control how it appears:</p>
+            <pre><code>---
+title: Dedication      # used for the navigation table of contents
+class: dedication      # styling hook
+toc: false             # hide from the TOC
+showTitle: false       # don't print the heading
+---
+
+For everyone who ever took a clock apart…</code></pre>
+          </section>
+
+          <section id="documents">
+            <h2>9 · Embedded documents (letters, journals, texts…) <a class="toplink" href="#top">↑ top</a></h2>
+            <p>Fiction is full of things characters <em>read</em>. EPUB Maker styles these distinctly. There are two forms.</p>
+
+            <h3>Block — a whole document on its own</h3>
+            <p>Wrap it in a fenced <code>:::</code> block:</p>
+            <pre><code>::: letter
+Dear Margaret,
+
+The garden is yours now. Wind it gently — it frightens easily.
+
+[— C. A.]{.signature}
+:::
+
+::: journal
+14th of October. The lilies will not keep time, however I wind them.
+:::
+
+::: text
+**Etta:** Are you there?
+**Bramble:** The kettle is warm.
+:::</code></pre>
+
+            <h3>Inline — a few words woven into the prose</h3>
+            <p>So it gets its own look instead of being mistaken for ordinary emphasis:</p>
+            <pre><code>The book grew warm. [You'll have made a mess of it,]{.journal} said the aunt's hand.</code></pre>
+
+            <h4>Recognised types</h4>
+            <p><strong>letter</strong>, <strong>journal</strong> (diary), <strong>text</strong> (message / sms / chat),
+              <strong>note</strong>, <strong>telegram</strong>, <strong>sign</strong> (inscription), <strong>verse</strong> (poem).
+              Extras:</p>
+            <ul>
+              <li><code>[— Name]{.signature}</code> right-aligns a letter's sign-off.</li>
+              <li>Inside a <strong>text</strong> block, a <code>**Name:**</code> prefix labels the speaker and the bubbles
+                alternate sides automatically (first speaker on the right).</li>
+            </ul>
+            <div class="callout tip">
+              <p><span class="label">Make them look the part:</span> pair these with an embedded font (next section) — e.g. a
+                handwriting font for <code>journal</code> — so a diary entry reads as real handwriting, even on a Kindle.</p>
+            </div>
+          </section>
+
+          <section id="themes">
+            <h2>10 · Themes <a class="toplink" href="#top">↑ top</a></h2>
+            <table>
+              <tr><th>Theme</th><th>Look</th></tr>
+              <tr><td><strong>Classic</strong></td><td>Traditional serif, small-caps centered chapter titles</td></tr>
+              <tr><td><strong>Modern</strong></td><td>Sans-serif, block paragraphs, bold left chapter titles</td></tr>
+              <tr><td><strong>Decorative</strong></td><td>Serif with drop caps and a ❧ floral ornament between scenes</td></tr>
+            </table>
+            <p>Pick a theme in the sidebar; the preview updates instantly. You can override any theme per book in the
+              <a href="#typography">Typography</a> panel.</p>
+          </section>
+
+          <section id="fonts">
+            <h2>11 · Custom fonts <a class="toplink" href="#top">↑ top</a></h2>
+            <p>By default, document styles use sensible system fonts (which e-readers may substitute). To make a
+              journal look like <em>real handwriting everywhere</em> — including Kindle — embed your own font and assign it
+              to a style in <code>book.yaml</code>:</p>
+            <pre><code>fonts:
+  - file: fonts/ShadowsIntoLight.ttf   # put the font file in your book folder
+    family: Handwriting
+styles:
+  journal:
+    font: Handwriting                  # diary/journal text uses it
+  note:
+    font: Handwriting</code></pre>
+            <p>Embedded fonts are <strong>baked into the EPUB</strong> and <strong>inlined into the PDF</strong>, so they look the
+              same in every format and on every device. <code>styles</code> entries also accept <code>size</code>,
+              <code>color</code>, and <code>align</code>.</p>
+            <div class="callout warn">
+              <p><span class="label">Licensing:</span> only embed fonts you're licensed to redistribute. Open-license (OFL)
+                fonts from Google Fonts are a safe choice. The sample bundles the OFL <em>Shadows Into Light</em> font.</p>
+            </div>
+          </section>
+
+          <section id="typography">
+            <h2>12 · Typography <a class="toplink" href="#top">↑ top</a></h2>
+            <p>The <strong>Typography</strong> panel (and a matching <code>typography:</code> block in <code>book.yaml</code>)
+              overrides the theme per book:</p>
+            <ul>
+              <li><strong>Body font</strong> &amp; <strong>Heading font</strong> — a system font, or one of your embedded fonts</li>
+              <li><strong>Drop caps</strong> — on / off / theme default</li>
+              <li><strong>Scene break</strong> — choose the ornament</li>
+              <li><strong>Chapter title</strong> — size, case (Normal / Small caps / UPPERCASE), alignment, italic</li>
+            </ul>
+            <pre><code>typography:
+  bodyFont: Garamond          # a system font, or a family from fonts: (embedded)
+  headingFont: Handwriting
+  dropcap: false
+  sceneOrnament: "❦"
+  chapterTitle:
+    size: "1.7em"
+    case: smallcaps           # normal | smallcaps | uppercase
+    align: center             # left | center | right
+    style: italic             # normal | italic</code></pre>
+            <p>Changes preview live. Click <strong>Save typography to book.yaml</strong> to keep them. A font listed under
+              <code>fonts:</code> renders everywhere; a plain system-font name is a suggestion e-readers may substitute.</p>
+          </section>
+
+          <section id="preview">
+            <h2>13 · Previewing <a class="toplink" href="#top">↑ top</a></h2>
+            <p>The bar above the preview offers:</p>
+            <ul>
+              <li><strong>Fit width / Kindle / Kobo / Phone / iPad</strong> — see how your text <em>reflows</em> at each screen
+                width (with an e-ink tint for the e-readers). This is a representative approximation, not a per-device engine —
+                every reading app lays text out a little differently, which is the whole point of reflowable EPUB.</li>
+              <li><strong>🖨 Print</strong> — paginates your book with the <em>same engine</em> as the print PDF and shows the
+                actual pages: trim size, margins, running heads, page numbers, recto chapter openings. Changing options in the
+                <strong>Print book (PDF)</strong> panel updates this view. (It runs the print engine, so it takes a few seconds
+                to refresh.)</li>
+            </ul>
+            <div class="callout note">
+              <p>Editing a folder on disk? Make your changes in your editor, then click <strong>↻ Reload</strong> to pull them in.</p>
+            </div>
+          </section>
+
+          <section id="ebook">
+            <h2>14 · Export ebook <a class="toplink" href="#top">↑ top</a></h2>
+            <p>The <strong>Export (ebook)</strong> panel downloads:</p>
+            <table>
+              <tr><th>Button</th><th>Format</th><th>Where it's for</th></tr>
+              <tr><td>EPUB · Amazon KDP</td><td>EPUB 3</td><td>KDP upload. Reader-controlled fonts, small file size.</td></tr>
+              <tr><td>EPUB · Universal</td><td>EPUB 3</td><td>Curios, BookFunnel, your own site. Standards-clean, kept email-friendly.</td></tr>
+              <tr><td>Word (.docx)</td><td>DOCX</td><td>Editors, collaborators, other tools.</td></tr>
+              <tr><td>Compiled Markdown</td><td>.md</td><td>One clean file for reuse elsewhere.</td></tr>
+              <tr><td>Reading PDF</td><td>PDF</td><td>A screen/proof PDF (not print-ready trim — that's §15).</td></tr>
+            </table>
+            <p>Both EPUBs include your cover, a full table of contents (the formats KDP and Kobo require), and embedded
+              fonts. The generated <strong>title page</strong> carries your <em>series</em> line (e.g. “A Gadding Goose Novella”)
+              and matches the on-screen preview, and the front matter is ordered the conventional way:
+              <em>Title → Copyright → Contents → Dedication → Epigraph → chapters</em>. After an EPUB export, the app shows
+              <strong>validation</strong> results. Files are also written to the <code>output/</code> folder.</p>
+            <div class="callout note">
+              <p><span class="label">Reading PDF vs. Print book (PDF):</span> the <strong>Reading PDF</strong> here is a quick
+                on-screen <em>proof</em> — it has no trim size, running heads, or page numbers. For anything you upload to a
+                printer, use <strong>Generate print PDF</strong> in the <a href="#print">Print book (PDF)</a> panel instead
+                (its file name ends in <code>-print-…</code>).</p>
+            </div>
+            <div class="callout warn">
+              <p><span class="label">Cover reminder:</span> if your book has no cover yet, the panel warns you — EPUBs for KDP,
+                Curios &amp; BookFunnel need one. Add it under <strong>Book details</strong> (Replace) or drop a
+                <code>cover.png</code>/<code>.jpg</code> in your folder. (Cover <em>art</em> is separate from formatting.)</p>
+            </div>
+          </section>
+
+          <section id="print">
+            <h2>15 · Print book (PDF) <a class="toplink" href="#top">↑ top</a></h2>
+            <p>The <strong>Print book (PDF)</strong> panel produces a print-ready interior PDF from the same source and theme:</p>
+            <ul>
+              <li><strong>Trim size</strong> — 5×8, 5.25×8, 5.5×8.5, 6×9, and 8.5×11&nbsp;in (Letter) — KDP / IngramSpark standards</li>
+              <li><strong>Binding</strong> — paperback or hardcover (hardcover gets a wider gutter)</li>
+              <li><strong>Header &amp; footer</strong> — choose what the running head shows (Author/Title or Title/Chapter)
+                and where the page number sits (bottom-center or top-outer)</li>
+              <li><strong>Start chapters on a right-hand page</strong> — inserts blanks as needed</li>
+              <li><strong>Page-count-aware gutter</strong> — the inner margin scales with the book's length to meet KDP's
+                requirements; the panel shows a live estimate, and the exact gutter is locked in at export</li>
+            </ul>
+            <p>The interior is laid out the way print books are:</p>
+            <ul>
+              <li>A <strong>Table of Contents</strong> page (after the copyright page) listing your chapters with page numbers and dotted leaders.</li>
+              <li><strong>Page numbers restart at Chapter&nbsp;1</strong> — front matter (title, copyright, contents, dedication, epigraph)
+                and back matter carry <em>no running head and no page number</em>, and auto-inserted blank pages stay blank.</li>
+              <li>Chapter titles drop down the page, with no running head on the opening page.</li>
+            </ul>
+            <p>Use <strong>👁 Preview in print view</strong> to check the layout, then <strong>Generate print PDF</strong>
+              (the downloaded file's name ends in <code>-print-&lt;trim&gt;</code>).</p>
+            <div class="callout note">
+              <p>This produces the <strong>interior</strong> (the text block). Build the <strong>cover wrap</strong> (front–spine–back) in
+                your print provider's cover tool — the spine width depends on the final page count and paper.</p>
+            </div>
+          </section>
+
+          <section id="publish">
+            <h2>16 · Where to publish <a class="toplink" href="#top">↑ top</a></h2>
+            <table>
+              <tr><th>Channel</th><th>Use</th></tr>
+              <tr><td><strong>Amazon KDP</strong></td><td>Upload the <em>EPUB · Amazon KDP</em> file (ebook) and/or the <em>print PDF</em> interior + a cover.</td></tr>
+              <tr><td><strong>Curios</strong></td><td>Upload the <em>EPUB · Universal</em> file (direct-to-fan sales).</td></tr>
+              <tr><td><strong>BookFunnel</strong></td><td>Upload the <em>EPUB · Universal</em> file for ARCs and promos.</td></tr>
+              <tr><td><strong>Your own website</strong></td><td>Sell or deliver the <em>EPUB · Universal</em> file directly.</td></tr>
+            </table>
+            <p>Each platform runs its own validation on upload, so don't worry if you don't have Java installed for local
+              EPUB checking.</p>
+          </section>
+
+          <section id="troubleshooting">
+            <h2>17 · Troubleshooting <a class="toplink" href="#top">↑ top</a></h2>
+            <table>
+              <tr><th>Symptom</th><th>Fix</th></tr>
+              <tr><td>"pandoc failed" / not found</td><td>Make sure <code>pandoc --version</code> works in a terminal. Install from pandoc.org and reopen the app.</td></tr>
+              <tr><td>PDF / print export errors</td><td>Chromium downloads on <code>npm install</code>; re-run it if the download was interrupted.</td></tr>
+              <tr><td>EPUB shows "valid (builtin)"</td><td>That's the lightweight checker. Install Java for full validation — your EPUB is still fine to upload.</td></tr>
+              <tr><td>Folder picker opens behind the window</td><td>Press <kbd>Alt</kbd>+<kbd>Tab</kbd> to bring it forward.</td></tr>
+              <tr><td>Edits not showing</td><td>If you opened a folder on disk, click <strong>↻ Reload</strong>. Restart the app to pick up app updates.</td></tr>
+              <tr><td>A book.yaml comment disappeared</td><td>When the app rewrites <code>book.yaml</code> (Save / Add matter), hand-written comments are dropped. Your prose files are never touched.</td></tr>
+            </table>
+          </section>
+
+          <section id="roadmap">
+            <h2>18 · Roadmap <a class="toplink" href="#top">↑ top</a></h2>
+            <p>Version 1 covers the full ebook + print pipeline. Planned and likely next:</p>
+            <ul>
+              <li>Interior <strong>images</strong> (chapter art, maps, author photo) with captions</li>
+              <li><strong>Parts / volumes</strong> (Part One / Part Two with part-title pages)</li>
+              <li>Footnotes / endnotes; a half-title page; bleed &amp; crop marks for print</li>
+              <li>A visual header/footer <strong>layout picker</strong>, more themes, and an in-app theme editor</li>
+              <li>Saved projects and a headless batch mode</li>
+            </ul>
+            <p>Because you own the code, you (or an AI coding assistant) can add any of these yourself.</p>
+          </section>
+
+          <section id="porting">
+            <h2>19 · Other operating systems <a class="toplink" href="#top">↑ top</a></h2>
+            <p>
+              <strong>This is the Windows version.</strong> Almost everything is cross-platform already (Node, Pandoc, and
+              Chromium all run on macOS and Linux). The main Windows-specific piece is the native
+              <strong>📁 Choose folder…</strong> button, which uses a Windows (PowerShell) dialog — on other systems you'd
+              paste the folder path instead, or swap in a Mac/Linux folder dialog.
+            </p>
+            <p>
+              The simplest way to adapt it is to open the project in an AI coding tool — <strong>OpenAI Codex</strong> or
+              <strong>Claude Code</strong> — and ask it to <em>"make the folder picker and any Windows-only paths work on
+              macOS / Linux."</em> The whole project is plain TypeScript, so this is a small change.
+            </p>
+            <div class="callout tip">
+              <p>Until then, on macOS/Linux you can use every feature by <em>pasting the folder path</em> (or dragging in
+                files) instead of the native folder button.</p>
+            </div>
+          </section>
+
+          <section id="credits">
+            <h2>20 · Credits &amp; licenses <a class="toplink" href="#top">↑ top</a></h2>
+            <ul>
+              <li><strong>Pandoc</strong> — document conversion engine (GPL).</li>
+              <li><strong>Paged.js</strong> — print pagination (MIT).</li>
+              <li><strong>Puppeteer / Chromium</strong> — PDF &amp; print rendering.</li>
+              <li><strong>Shadows Into Light</strong> by Kimberly Geswein — handwriting font used in the sample
+                (SIL Open Font License; see <code>samples/clockwork-garden/fonts/OFL.txt</code>).</li>
+            </ul>
+            <p class="pill">Version 1.1 · Windows · in active development</p>
+          </section>
+
+          <footer>
+            EPUB Maker — your manuscripts, your tool, your files. This guide describes Version 1 and will be updated as
+            the app grows. Built with Markdown, Pandoc, and a lot of care.
+          </footer>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

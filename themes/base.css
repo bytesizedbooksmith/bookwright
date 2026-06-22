@@ -1,0 +1,362 @@
+/* ============================================================
+   EPUB Maker — base layout (theme-agnostic structure)
+   Shared by every theme; loaded before the theme's own CSS.
+   Works in both the live preview and inside the EPUB.
+   ============================================================ */
+
+html {
+  font-size: 100%;
+}
+
+/* EPUB cover page (Pandoc auto-generates <body id="cover"> wrapping an SVG sized
+   at 100%/100%). Without a height chain the SVG collapses to a thumbnail in some
+   readers (notably Adobe Digital Editions). Give the page full height so the
+   cover fills it; the SVG's own preserveAspectRatio keeps it centered & undistorted. */
+html {
+  height: 100%;
+}
+body#cover {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+#cover-image {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+#cover-image svg,
+#cover-image img {
+  height: 100%;
+  max-width: 100%;
+}
+
+body {
+  margin: 0 5%;
+  line-height: 1.5;
+  text-align: justify;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  widows: 2;
+  orphans: 2;
+}
+
+/* The final line of justified text must stay ragged-left, never stretched
+   edge-to-edge. (Some engines justify the last line otherwise.) */
+p,
+li {
+  text-align-last: left;
+}
+
+/* Headings match their own alignment on the last line. */
+h1,
+h2,
+h3 {
+  text-align-last: auto;
+}
+
+/* Centered blocks keep their (often single) last line centered. This includes
+   the centered embedded documents (note/telegram/sign/verse), whose single line
+   would otherwise be forced ragged-left by the paragraph rule above. */
+section.titlepage,
+section.titlepage *,
+section.copyright,
+section.copyright *,
+section.dedication,
+section.dedication *,
+section.epigraph,
+section.epigraph *,
+.scene-break,
+.note, .note *,
+.telegram, .telegram *,
+.sign, .sign *,
+.inscription, .inscription *,
+.verse, .verse *,
+.poem, .poem * {
+  text-align-last: center;
+}
+
+/* In the live preview / PDF we constrain to a page-like column.
+   EPUB has no <main class="book">, so reading systems control width. */
+main.book {
+  max-width: 34em;
+  margin: 0 auto;
+  padding: 1em 1.4em 4em;
+}
+
+/* --- Paragraphs: indented fiction style, no inter-paragraph gap --- */
+p {
+  margin: 0;
+  text-indent: 1.25em;
+}
+section > h1 + p,
+h1 + p,
+.scene-break + p,
+hr + p,
+blockquote > p:first-child {
+  text-indent: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: normal;
+  line-height: 1.2;
+  text-align: left;
+}
+
+/* Hidden section titles (copyright, dedication, epigraph) — kept for nav. */
+.hide-title > h1,
+h1.hide-title {
+  display: none;
+}
+
+/* Each top-level section opens a new page (print + EPUB-aware). */
+section.level1 {
+  break-before: page;
+  page-break-before: always;
+}
+@media screen {
+  main.book section.level1 {
+    margin-top: 3.5em;
+    border-top: 1px dashed rgba(128, 128, 128, 0.25);
+    padding-top: 2.5em;
+  }
+  main.book section.level1:first-child {
+    margin-top: 0;
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+/* --- Scene break --- */
+.scene-break {
+  text-align: center;
+  text-indent: 0;
+  margin: 1.4em 0;
+}
+
+/* --- Title page --- */
+section.titlepage {
+  text-align: center;
+  padding-top: 2em;
+}
+section.titlepage > h1 {
+  text-align: center;
+}
+.tp-subtitle {
+  text-indent: 0;
+  font-style: italic;
+  margin-top: 0.4em;
+}
+.tp-author {
+  text-indent: 0;
+  margin-top: 2.5em;
+}
+.tp-series {
+  text-indent: 0;
+  margin-top: 0.4em;
+  font-size: 0.9em;
+}
+.tp-publisher {
+  text-indent: 0;
+  margin-top: 3em;
+  font-size: 0.85em;
+}
+
+/* --- Copyright --- */
+section.copyright {
+  font-size: 0.85em;
+  text-align: center;
+}
+section.copyright p {
+  text-indent: 0;
+  margin: 0.6em 0;
+}
+
+/* --- Dedication / epigraph --- */
+section.dedication {
+  text-align: center;
+  font-style: italic;
+  margin-top: 5em;
+}
+section.dedication p {
+  text-indent: 0;
+  margin: 0.4em 0;
+}
+section.epigraph {
+  margin-top: 4em;
+}
+section.epigraph blockquote {
+  font-style: italic;
+  border: 0;
+  margin: 1em 2em;
+}
+section.epigraph blockquote p {
+  text-indent: 0;
+}
+
+/* --- Blockquotes (in-text notes) --- */
+blockquote {
+  margin: 1.2em 1.8em;
+  font-style: italic;
+}
+blockquote p {
+  text-indent: 0;
+}
+
+/* --- Back matter --- */
+section.backmatter ul,
+section.backmatter ol {
+  text-indent: 0;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============================================================
+   Embedded documents — letters, journals, text messages, etc.
+   Block form:   ::: letter  …  :::
+   Inline form:  [the written words]{.letter}
+   Aliases are styled together (journal/diary, text/message/sms/chat,
+   sign/inscription, verse/poem).
+   ============================================================ */
+
+.letter,
+.journal,
+.diary,
+.note,
+.telegram,
+.sign,
+.inscription,
+.verse,
+.poem,
+.text,
+.message,
+.sms,
+.chat {
+  margin: 1.5em 0;
+}
+.letter p,
+.journal p,
+.diary p,
+.note p,
+.telegram p,
+.verse p,
+.poem p {
+  text-indent: 0;
+}
+
+/* Letter / correspondence — inset, with a right-aligned signature line. */
+.letter {
+  margin-left: 1.6em;
+  margin-right: 1.6em;
+}
+.letter p {
+  margin: 0 0 0.7em;
+}
+.signature {
+  display: block;
+  text-align: right;
+  /* Override the body rule that forces a paragraph's last line ragged-left;
+     a signature is a single line, so without this it would stay left. */
+  text-align-last: right;
+}
+
+/* Journal / diary — handwriting feel (falls back to italic), ruled margin. */
+.journal,
+.diary {
+  font-family: "Segoe Script", "Bradley Hand", "Brush Script MT", cursive;
+  font-style: italic;
+  margin-left: 1.4em;
+  padding-left: 1em;
+  border-left: 2px solid rgba(120, 90, 60, 0.3);
+}
+.journal p,
+.diary p {
+  margin: 0 0 0.5em;
+}
+/* inline form: just the lettering, no block frame */
+span.journal,
+span.diary,
+span.note {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: inline;
+}
+
+/* Handwritten note / scrap — centered. */
+.note {
+  font-family: "Segoe Script", "Bradley Hand", cursive;
+  text-align: center;
+}
+
+/* Text messages / chat — bubbles (alignment set by the book.lua filter). */
+.text,
+.message,
+.sms,
+.chat {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 0.95em;
+}
+.msg {
+  margin: 0.45em 0;
+  padding: 0.4em 0.8em;
+  border-radius: 1.1em;
+  width: fit-content;
+  max-width: 78%;
+  background: rgba(0, 0, 0, 0.07);
+}
+.msg p {
+  text-indent: 0;
+  margin: 0;
+}
+.msg.me {
+  margin-left: auto;
+  background: #d9efd6;
+}
+/* fallback when the filter hasn't wrapped messages */
+.text > p,
+.message > p,
+.sms > p,
+.chat > p {
+  text-indent: 0;
+  margin: 0.45em 0;
+  padding: 0.4em 0.8em;
+  border-radius: 1.1em;
+  width: fit-content;
+  max-width: 78%;
+  background: rgba(0, 0, 0, 0.07);
+}
+
+/* Telegram / typed dispatch — monospace, spaced caps. */
+.telegram {
+  font-family: "Courier New", Courier, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+  font-size: 0.9em;
+}
+
+/* Sign / inscription / plaque — boxed small caps. */
+.sign,
+.inscription {
+  text-align: center;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  padding: 0.7em 1em;
+  margin: 1.5em auto;
+  max-width: 72%;
+}
+
+/* Verse / poem / song. */
+.verse,
+.poem {
+  font-style: italic;
+  text-align: center;
+}

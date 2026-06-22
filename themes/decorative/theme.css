@@ -1,0 +1,49 @@
+/* ============================================================
+   Decorative — serif with drop caps and a floral ornament.
+   ============================================================ */
+
+body {
+  font-family: "Hoefler Text", Baskerville, "Palatino Linotype", Palatino,
+    Georgia, serif;
+}
+
+section.chapter > h1,
+h1.chapter {
+  text-align: center;
+  font-style: italic;
+  font-size: 1.75em;
+  margin: 0 0 0.2em;
+}
+
+/* Ornamental flourish beneath each chapter title. */
+section.chapter > h1::after {
+  content: "❧";
+  display: block;
+  font-style: normal;
+  font-size: 0.62em;
+  color: #b0894a;
+  margin: 0.45em 0 1.5em;
+}
+
+/* Drop cap on the first paragraph of each chapter. */
+.dropcap {
+  float: left;
+  font-size: 3.4em;
+  line-height: 0.74;
+  padding: 0.02em 0.09em 0 0;
+  color: #7a3b2e;
+  font-family: "Hoefler Text", Georgia, serif;
+}
+
+section.backmatter > h1,
+h1.backmatter {
+  text-align: center;
+  font-style: italic;
+  font-size: 1.4em;
+  margin: 0 0 1.1em;
+}
+
+.scene-break {
+  color: #b0894a;
+  font-size: 1.25em;
+}

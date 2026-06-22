@@ -1,0 +1,60 @@
+# ============================================================
+#  EPUB Maker — book configuration
+#  This single file describes your book's metadata, the theme,
+#  and the order of its parts. Everything else is Markdown.
+# ============================================================
+
+# --- Metadata (used for the EPUB, title page, copyright page) ---
+title: The Clockwork Garden
+subtitle: A Novel
+author: Eleanor Vance
+series: The Tinkerer's Trilogy
+series_index: 1
+publisher: Bramblewood Press
+language: en
+isbn: "978-1-7384521-0-6"        # optional; a UUID is generated if omitted
+description: >
+  When a dying inventor leaves Margaret a brass key and a riddle, she
+  discovers a garden where the flowers tick like clocks and nothing —
+  least of all time — grows the way it should.
+copyright: |
+  Copyright © 2026 Eleanor Vance. All rights reserved.
+
+  This is a work of fiction. Names, characters, places, and incidents
+  are products of the author's imagination.
+rights: All rights reserved.
+
+# --- Presentation ---
+cover: cover.png                 # relative to this file
+theme: decorative                # classic | modern | decorative
+
+# --- Custom fonts (optional) ---
+# Embed your own fonts and assign them to document styles (journal, letter,
+# note, etc.). Fonts are embedded in the EPUB and inlined into the PDF, so they
+# render the same everywhere — even on e-readers that lack the font.
+fonts:
+  - file: fonts/ShadowsIntoLight.ttf   # OFL, bundled in fonts/
+    family: Handwriting
+styles:
+  journal:
+    font: Handwriting              # diary/journal entries in real handwriting
+  note:
+    font: Handwriting
+
+# --- Structure ---
+# Keywords (titlepage, copyright) are generated from the metadata above.
+# Anything else is a path to a Markdown file relative to this folder.
+frontmatter:
+  - titlepage
+  - copyright
+  - frontmatter/dedication.md
+  - frontmatter/epigraph.md
+
+# "chapters" may be a folder (files read in filename order) or a single
+# Markdown file (split into chapters on each top-level "# Heading").
+chapters: chapters
+
+backmatter:
+  - backmatter/about-the-author.md
+  - backmatter/also-by.md
+  - backmatter/newsletter.md

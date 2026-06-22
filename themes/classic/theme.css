@@ -1,0 +1,36 @@
+/* ============================================================
+   Classic — traditional serif, small-caps centered chapter titles.
+   ============================================================ */
+
+body {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+    Georgia, "Times New Roman", serif;
+}
+
+section.chapter > h1,
+h1.chapter {
+  text-align: center;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  font-size: 1.6em;
+  margin: 0 0 1.8em;
+}
+
+section.backmatter > h1,
+h1.backmatter {
+  text-align: center;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  font-size: 1.3em;
+  margin: 0 0 1.2em;
+}
+
+.tp-author {
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
+}
+
+.scene-break {
+  letter-spacing: 0.6em;
+  color: #333;
+}

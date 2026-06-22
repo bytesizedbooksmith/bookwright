@@ -1,0 +1,42 @@
+/* ============================================================
+   Modern — sans-serif, block paragraphs, bold left chapter titles.
+   ============================================================ */
+
+body {
+  font-family: "Helvetica Neue", "Segoe UI", system-ui, -apple-system, Arial,
+    sans-serif;
+  line-height: 1.6;
+}
+
+/* Block-style paragraphs (no indent, space between). */
+p {
+  text-indent: 0;
+  margin: 0 0 1em;
+}
+
+section.chapter > h1,
+h1.chapter {
+  text-align: left;
+  font-weight: 700;
+  font-size: 2em;
+  letter-spacing: -0.01em;
+  margin: 0 0 1.2em;
+}
+
+section.backmatter > h1,
+h1.backmatter {
+  text-align: left;
+  font-weight: 700;
+  font-size: 1.5em;
+  margin: 0 0 1em;
+}
+
+.tp-author {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.scene-break {
+  letter-spacing: 0.4em;
+  color: #999;
+}
