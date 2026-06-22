@@ -368,3 +368,13 @@ samples/           the bundled sample book
   if the download was interrupted.
 - **EPUB "valid (builtin)"** — that's the lightweight checker; install Java for full
   EPUBCheck. Your EPUB is still fine for upload; retailers run their own validation.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE) — free to use, modify, and
+redistribute (including commercially); just keep the copyright notice. Fork it
+and make it your own.
+
+Version history is tracked in [CHANGELOG.md](CHANGELOG.md).
