@@ -70,7 +70,7 @@ export async function readConfig(bookDir: string): Promise<RawConfig | null> {
 async function writeConfig(bookDir: string, cfg: RawConfig): Promise<void> {
   const p = (await findConfig(bookDir)) ?? configPath(bookDir);
   const header =
-    "# Bookwright book configuration. Edit freely — this controls metadata,\n" +
+    "# Byte-Sized Book Formatter book configuration. Edit freely — this controls metadata,\n" +
     "# theme, and the order of front matter, chapters, and back matter.\n";
   await fs.writeFile(p, header + yaml.dump(cfg, { lineWidth: 100 }), "utf8");
 }

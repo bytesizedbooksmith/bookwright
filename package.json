@@ -1,14 +1,14 @@
 {
-  "name": "bookwright",
+  "name": "byte-sized-book-formatter",
   "version": "1.1.0",
   "private": true,
-  "description": "Bookwright — a Markdown book formatter that turns manuscripts into publish-ready ebooks (EPUB) and print PDFs, plus DOCX & Markdown. Local web app with live preview.",
+  "description": "Byte-Sized Book Formatter — a Markdown book formatter that turns manuscripts into publish-ready ebooks (EPUB) and print PDFs, plus DOCX & Markdown. Local web app with live preview.",
   "author": "Angie Hartwell (Byte-Sized Booksmith)",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "concurrently -k -n server,web -c blue,magenta \"npm:dev:server\" \"npm:dev:web\"",
-    "dev:server": "cross-env BOOKWRIGHT_DEV=1 tsx watch server/index.ts",
+    "dev:server": "cross-env BOOK_FORMATTER_DEV=1 tsx watch server/index.ts",
     "dev:web": "vite",
     "build": "vite build",
     "start": "npm run build && tsx server/index.ts",

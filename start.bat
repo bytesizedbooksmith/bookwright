@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM  Bookwright - double-click launcher
+REM  Byte-Sized Book Formatter - double-click launcher
 REM  Builds the app (first run) and opens it in your browser.
 REM ============================================================
 cd /d "%~dp0"
@@ -16,6 +16,6 @@ if not exist "node_modules" (
   )
 )
 
-echo Starting Bookwright...
+echo Starting Byte-Sized Book Formatter...
 call npm start
 pause

@@ -1,11 +1,18 @@
 # Changelog
 
-All notable changes to Bookwright are documented here.
+All notable changes to Byte-Sized Book Formatter are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Changed
+- **Renamed from "Bookwright" to "Byte-Sized Book Formatter"** — the previous
+  name conflicted with a registered business. All user-facing strings, the
+  package name (`byte-sized-book-formatter`), the dev env vars
+  (`BOOK_FORMATTER_DEV` / `BOOK_FORMATTER_NO_OPEN`), and internal identifiers
+  were updated.
 
 Planned (see the README roadmap): a custom theme editor, parts/volumes,
 foot/endnotes, full-bleed image support for print, saved projects, and a
@@ -40,6 +47,6 @@ headless CLI/batch mode.
 - **Word (.docx)**, compiled Markdown, and reading-PDF exports.
 - Theme styling system shared across preview and all exports.
 
-[Unreleased]: https://github.com/bytesizedbooksmith/bookwright/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/bytesizedbooksmith/bookwright/releases/tag/v1.1.0
-[1.0.0]: https://github.com/bytesizedbooksmith/bookwright/releases/tag/v1.0.0
+[Unreleased]: https://github.com/bytesizedbooksmith/byte-sized-book-formatter/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/bytesizedbooksmith/byte-sized-book-formatter/releases/tag/v1.1.0
+[1.0.0]: https://github.com/bytesizedbooksmith/byte-sized-book-formatter/releases/tag/v1.0.0

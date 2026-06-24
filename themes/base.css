@@ -1,5 +1,5 @@
 /* ============================================================
-   Bookwright — base layout (theme-agnostic structure)
+   Byte-Sized Book Formatter — base layout (theme-agnostic structure)
    Shared by every theme; loaded before the theme's own CSS.
    Works in both the live preview and inside the EPUB.
    ============================================================ */

@@ -1,4 +1,4 @@
-# Bookwright 📖
+# Byte-Sized Book Formatter 📖
 
 **A Markdown book formatter for indie authors.** Turn your manuscripts into
 publish-ready books — a Windows-friendly, self-owned alternative to Vellum
@@ -155,7 +155,7 @@ backmatter:
 ## Embedded documents (letters, journals, texts…)
 
 Fiction is full of *things characters read*: a letter, a diary entry, a text-message
-exchange, a sign on a door. Bookwright styles these distinctly. Two forms:
+exchange, a sign on a door. Byte-Sized Book Formatter styles these distinctly. Two forms:
 
 **Block** — a whole document set off on its own, with a fenced `:::` block:
 

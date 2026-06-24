@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(__dirname, "..");
 
 const PORT = Number(process.env.PORT ?? 4242);
-const isDev = process.env.BOOKWRIGHT_DEV === "1";
+const isDev = process.env.BOOK_FORMATTER_DEV === "1";
 
 const app = express();
 app.use(express.json({ limit: "5mb" }));
@@ -24,8 +24,8 @@ if (!isDev) {
 
 app.listen(PORT, () => {
   const url = isDev ? "http://localhost:5173" : `http://localhost:${PORT}`;
-  console.log(`\n  Bookwright running at ${url}\n`);
-  if (!isDev && process.env.BOOKWRIGHT_NO_OPEN !== "1") {
+  console.log(`\n  Byte-Sized Book Formatter running at ${url}\n`);
+  if (!isDev && process.env.BOOK_FORMATTER_NO_OPEN !== "1") {
     open(url).catch(() => {});
   }
 });

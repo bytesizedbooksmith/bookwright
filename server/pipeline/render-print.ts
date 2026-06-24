@@ -57,7 +57,7 @@ async function withPaginated<T>(
 
   // The print CSS (esp. the @page size) MUST be in the document before Paged.js
   // initializes, or it falls back to US Letter. Inject it into <head>.
-  const styleTag = `<style id="bookwright-print">\n${printBaseCss}\n${pageCss}\n</style>`;
+  const styleTag = `<style id="book-formatter-print">\n${printBaseCss}\n${pageCss}\n</style>`;
   const html = baseHtml.includes("</head>")
     ? baseHtml.replace("</head>", `${styleTag}\n</head>`)
     : `${styleTag}\n${baseHtml}`;
