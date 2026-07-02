@@ -13,7 +13,7 @@ import type {
   ThemeName,
   Typography,
 } from "./types.ts";
-import { extractTitle, slugify, splitOnH1, uniqueId } from "./util.ts";
+import { extractSubtitle, extractTitle, slugify, splitOnH1, uniqueId } from "./util.ts";
 import { AppError } from "../errors.ts";
 
 const THEMES: ThemeName[] = ["classic", "modern", "decorative"];
@@ -163,15 +163,20 @@ async function sectionFromFile(
   const title =
     (typeof fm.title === "string" && fm.title) || fromBody.title || path.basename(filePath, path.extname(filePath));
   const body = fromBody.title ? fromBody.body : parsed.content;
+  // Chapter subtitle: an explicit `subtitle:` in frontmatter wins; otherwise a
+  // leading "## …" line under the title. The leading H2 is stripped either way.
+  const ex = extractSubtitle(body);
+  const subtitle = (typeof fm.subtitle === "string" && fm.subtitle.trim()) || ex.subtitle || undefined;
   const id = uniqueId(slugify(title), used);
   return {
     id,
     title,
+    subtitle,
     kind,
     className: typeof fm.class === "string" ? fm.class : slugify(title),
     toc: typeof fm.toc === "boolean" ? fm.toc : defaults.toc,
     showTitle: typeof fm.showTitle === "boolean" ? fm.showTitle : defaults.showTitle,
-    markdown: body.trim(),
+    markdown: ex.body.trim(),
   };
 }
 
@@ -201,14 +206,18 @@ export async function loadBook(inputPath: string, overrides?: Partial<BookMeta>)
     const chapters = splitOnH1(parsed.content);
     const sections: Section[] =
       chapters.length > 0
-        ? chapters.map((c) => ({
-            id: uniqueId(slugify(c.title), used),
-            title: c.title,
-            kind: "chapter" as const,
-            toc: true,
-            showTitle: true,
-            markdown: c.body,
-          }))
+        ? chapters.map((c) => {
+            const ex = extractSubtitle(c.body);
+            return {
+              id: uniqueId(slugify(c.title), used),
+              title: c.title,
+              subtitle: ex.subtitle,
+              kind: "chapter" as const,
+              toc: true,
+              showTitle: true,
+              markdown: ex.body,
+            };
+          })
         : [
             {
               id: "content",
@@ -309,13 +318,15 @@ export async function loadBook(inputPath: string, overrides?: Partial<BookMeta>)
     } else {
       const raw = await fs.readFile(chaptersRef, "utf8");
       for (const c of splitOnH1(matter(raw).content)) {
+        const ex = extractSubtitle(c.body);
         sections.push({
           id: uniqueId(slugify(c.title), used),
           title: c.title,
+          subtitle: ex.subtitle,
           kind: "chapter",
           toc: true,
           showTitle: true,
-          markdown: c.body,
+          markdown: ex.body,
         });
       }
     }

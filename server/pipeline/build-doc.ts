@@ -9,6 +9,9 @@ function headerAttr(section: Section): string {
   if (section.className && section.className !== section.kind) classes.push(section.className);
   if (!section.showTitle) classes.push("hide-title");
   if (!section.toc) classes.push("unlisted", "unnumbered");
+  // Static hook (EPUB-safe, unlike :has()) so themes can restyle a title that has
+  // a subtitle beneath it — e.g. Decorative moves its ornament below the subtitle.
+  if (section.subtitle && section.showTitle) classes.push("has-subtitle");
   const classStr = classes.map((c) => `.${c}`).join(" ");
   return `{#${section.id} ${classStr}}`;
 }
@@ -26,6 +29,15 @@ export function assembleMarkdown(book: Book, _target: Target): string {
   for (const section of book.sections) {
     parts.push(`# ${section.title} ${headerAttr(section)}`);
     parts.push("");
+    // Chapter subtitle: a fenced div right under the title (before the body, so
+    // the drop-cap filter still lands on the first body paragraph, not this).
+    // A native div (not raw HTML) so the text survives EPUB and DOCX.
+    if (section.subtitle && section.showTitle) {
+      parts.push(`::: chapter-subtitle`);
+      parts.push(section.subtitle);
+      parts.push(`:::`);
+      parts.push("");
+    }
     if (section.markdown.trim()) parts.push(section.markdown.trim());
     parts.push("");
   }
@@ -96,6 +108,7 @@ export function assembleCleanMarkdown(book: Book): string {
       continue;
     }
     parts.push(`# ${section.title}`);
+    if (section.subtitle) parts.push(`\n## ${section.subtitle}`);
     parts.push("");
     if (section.markdown.trim()) parts.push(section.markdown.trim());
     parts.push("");

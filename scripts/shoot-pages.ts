@@ -20,6 +20,14 @@ async function main() {
   if (dropcap === "on") book.typography = { ...book.typography, dropcap: true };
   if (dropcap === "off") book.typography = { ...book.typography, dropcap: false };
 
+  // SUB=1 injects alternating POV subtitles (mimics a POV-labelled book) so the
+  // chapter-subtitle styling can be proofed without editing the committed sample.
+  if (process.env.SUB) {
+    const povs = ["Wren", "Eli"];
+    let i = 0;
+    for (const s of book.sections) if (s.kind === "chapter") s.subtitle = povs[i++ % povs.length];
+  }
+
   const trim = process.env.TRIM || DEFAULT_PRINT.trim;
   const { html } = await renderPrintPreviewHtml(book, { ...DEFAULT_PRINT, trim });
   const browser = await getBrowser();

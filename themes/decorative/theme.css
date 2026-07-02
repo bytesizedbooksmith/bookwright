@@ -25,6 +25,35 @@ section.chapter > h1::after {
   margin: 0.45em 0 1.5em;
 }
 
+/* Chapter subtitle: copper small caps under the italic title (title / name / ❧).
+   The title's bottom margin is only 0.2em, so a small positive margin is enough. */
+.chapter-subtitle {
+  margin: 0.4em 0 0;
+}
+.chapter-subtitle p {
+  font-style: normal;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.14em;
+  font-size: 1em;
+  color: #7a3b2e;
+}
+/* When a subtitle follows, the flourish closes the opener block BELOW it, so it
+   reads as one lockup instead of orphaning the name under a divider ornament. */
+section.chapter > h1.has-subtitle::after {
+  content: none;
+}
+.chapter-subtitle::after {
+  content: "❧";
+  display: block;
+  font-style: normal;
+  font-variant: normal;
+  letter-spacing: normal;
+  font-size: 1.05em;
+  color: #b0894a;
+  margin: 0.55em 0 1.5em;
+}
+
 /* Drop cap: metrics come from base.css's .dropcap (the old 3.4em × 0.74 here
    bottomed out at ~2.5 lines, off the baseline). Keep only the copper accent
    and the display face. */

@@ -106,6 +106,28 @@ h3 {
   text-align: left;
 }
 
+/* --- Chapter subtitle (POV name / tagline under the chapter title) --- */
+.chapter-subtitle {
+  text-align: center;
+  margin: -0.75em 0 2em; /* pull up into the title's bottom margin; themes re-tune */
+}
+.chapter-subtitle p {
+  margin: 0;
+  text-indent: 0;
+  /* A single line is also the last line — the base `p` rule would force it
+     ragged-left, and a centered display line must never hyphenate. */
+  text-align-last: center;
+  -webkit-hyphens: none;
+  hyphens: none;
+  font-style: italic;
+  font-size: 1em;
+}
+/* The subtitle div displaces the `h1 + p` adjacency, so re-flush the first body
+   paragraph (and its drop cap) that now follows the subtitle instead of the h1. */
+.chapter-subtitle + p {
+  text-indent: 0;
+}
+
 /* Hidden section titles (copyright, dedication, epigraph) — kept for nav. */
 .hide-title > h1,
 h1.hide-title {

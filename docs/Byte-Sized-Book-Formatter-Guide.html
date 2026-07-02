@@ -307,12 +307,37 @@ backmatter:
             <table>
               <tr><th>Element</th><th>How to write it</th></tr>
               <tr><td>Chapter title</td><td><code># The Letter</code> (a top-level heading)</td></tr>
+              <tr><td>Chapter subtitle</td><td><code>## Wren</code> on the line right under the <code># Title</code> — an optional second line (POV name, tagline). See below.</td></tr>
               <tr><td>Scene break</td><td>A line of <code>* * *</code> (or <code>***</code>) — becomes the theme's ornament</td></tr>
               <tr><td>Italic / bold</td><td><code>*italic*</code> · <code>**bold**</code></td></tr>
               <tr><td>Block quote</td><td><code>&gt; quoted text</code></td></tr>
             </table>
             <p>That's all most novels need. Chapters can be one file each (in a <code>chapters/</code> folder, read in
               filename order — so number them <code>01-</code>, <code>02-</code>…) or one big file split on each <code>#</code> heading.</p>
+
+            <h3>Chapter subtitles (optional)</h3>
+            <p>A chapter can carry a <strong>second line under its title</strong> — a point-of-view name
+              (<em>Wren</em>, <em>Eli</em>), a location, or a short tagline. Write it as an <code>##</code> heading on the
+              line directly beneath the chapter's <code>#</code> title:</p>
+            <pre><code># The Quiet She Wanted
+## Wren
+
+The letter arrived on a Tuesday…</code></pre>
+            <p>Or, in a one-file-per-chapter book, set it in that file's front-matter header instead — handy when the
+              chapter title comes from the filename (the front-matter value wins if you use both):</p>
+            <pre><code>---
+subtitle: Wren
+---
+
+The letter arrived on a Tuesday…</code></pre>
+            <p>Each theme styles the subtitle to match its chapter title — small caps under Classic, a light
+              left-aligned line under Modern, copper small caps under Decorative — and it never appears in the table of
+              contents.</p>
+            <div class="callout note">
+              <p>Only the <em>first</em> line of a chapter is treated this way, so ordinary <code>##</code> subheadings
+                later in a chapter are untouched — and a chapter with no such line looks exactly as it always did.
+                Subtitles are entirely opt-in.</p>
+            </div>
           </section>
 
           <section id="matter">

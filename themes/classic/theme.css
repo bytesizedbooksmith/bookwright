@@ -45,6 +45,15 @@ h1.backmatter {
 /* Classic uses the body serif in body ink for its drop cap — the .dropcap float
    in base.css is exactly right, so there is intentionally no override here. */
 
+/* Chapter subtitle: italic roman under the small-caps title (keeps base italic).
+   -2.25em collapses against the title's 2.88em bottom margin → ~0.63em gap. */
+.chapter-subtitle {
+  margin: -2.25em 0 2.25em;
+}
+.chapter-subtitle p {
+  font-size: 1.1em;
+}
+
 .scene-break {
   letter-spacing: 0.6em;
   color: #333;

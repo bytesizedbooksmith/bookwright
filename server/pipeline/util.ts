@@ -29,6 +29,26 @@ export function extractTitle(markdown: string): { title?: string; body: string }
   return { body: markdown };
 }
 
+/**
+ * Pull a leading "## Subtitle" line off a chapter body, used for the optional
+ * chapter subtitle. Only the first non-empty line is considered, so ordinary
+ * "##" subheadings later in the chapter are untouched.
+ */
+export function extractSubtitle(markdown: string): { subtitle?: string; body: string } {
+  const lines = markdown.split(/\r?\n/);
+  let i = 0;
+  while (i < lines.length && lines[i].trim() === "") i++;
+  const m = lines[i]?.match(/^##\s+(.+?)\s*#*\s*$/);
+  if (m) {
+    const body = lines
+      .slice(i + 1)
+      .join("\n")
+      .replace(/^\s+/, "");
+    return { subtitle: m[1].trim(), body };
+  }
+  return { body: markdown };
+}
+
 /** Split a single markdown document into chapters on each top-level "# Heading". */
 export function splitOnH1(markdown: string): { title: string; body: string }[] {
   const lines = markdown.split(/\r?\n/);

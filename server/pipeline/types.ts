@@ -29,6 +29,7 @@ export type SectionKind =
 export interface Section {
   id: string; // unique slug, used as anchor / epub split id
   title: string; // used for the navigation TOC
+  subtitle?: string; // optional second line under the title (e.g. POV name, tagline)
   kind: SectionKind;
   className?: string; // extra body class, e.g. "dedication", "epigraph"
   toc: boolean; // include in the navigation TOC

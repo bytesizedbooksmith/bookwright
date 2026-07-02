@@ -63,6 +63,13 @@ img {
   margin: 0 0 -0.12em 0;
 }
 
+/* Keep the chapter subtitle with its title and the first body line (no orphaned
+   POV line stranded at a page bottom above the next page's drop cap). */
+.chapter-subtitle {
+  break-inside: avoid;
+  break-after: avoid;
+}
+
 /* Front matter shouldn't push down like chapters. */
 section.titlepage > h1,
 section.copyright > h1,
