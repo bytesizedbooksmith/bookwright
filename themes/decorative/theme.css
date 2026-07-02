@@ -25,14 +25,29 @@ section.chapter > h1::after {
   margin: 0.45em 0 1.5em;
 }
 
-/* Drop cap on the first paragraph of each chapter. */
+/* Drop cap: metrics come from base.css's .dropcap (the old 3.4em × 0.74 here
+   bottomed out at ~2.5 lines, off the baseline). Keep only the copper accent
+   and the display face. */
 .dropcap {
-  float: left;
-  font-size: 3.4em;
-  line-height: 0.74;
-  padding: 0.02em 0.09em 0 0;
   color: #7a3b2e;
-  font-family: "Hoefler Text", Georgia, serif;
+  font-family: "Hoefler Text", Baskerville, "Palatino Linotype", Georgia, serif;
+}
+
+/* Subtitle ties the title page into the theme's copper/gold palette (keeps the
+   base italic). The flourish echoes the chapter opener's ❧. */
+.tp-subtitle {
+  font-size: 1.15em;
+  letter-spacing: 0.02em;
+  color: #7a3b2e;
+  margin-top: 0.6em;
+}
+section.titlepage > h1::after {
+  content: "❧";
+  display: block;
+  font-style: normal;
+  font-size: 0.5em;
+  color: #b0894a;
+  margin-top: 0.5em;
 }
 
 section.backmatter > h1,

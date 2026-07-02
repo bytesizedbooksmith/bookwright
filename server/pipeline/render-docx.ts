@@ -6,7 +6,7 @@ import { cleanup, commonArgs, makeWorkspace, runPandoc } from "./pandoc.ts";
 
 /** Render a Word .docx as a Buffer. Uses Pandoc's default styles for now. */
 export async function renderDocx(book: Book): Promise<Buffer> {
-  const ws = await makeWorkspace(book);
+  const ws = await makeWorkspace(book, "docx");
   const outPath = path.join(ws.dir, "book.docx");
   try {
     const md = assembleMarkdown(book, "docx");

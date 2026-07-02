@@ -137,6 +137,22 @@ section.level1 {
   margin: 1.4em 0;
 }
 
+/* --- Drop cap ---
+   Float fallback for EPUB / preview, active in EVERY theme (the drop-cap toggle
+   used to be dead on Classic/Modern because only Decorative styled .dropcap).
+   Tuned for a 2-line seat at the 1.5 body leading: cap height + one line of
+   leading ≈ 2.2 body-em → font-size ≈ 3.1em; line-height:1 keeps the box height
+   predictable; the negative margin-bottom clamps it so exactly two lines wrap.
+   The print path swaps this for CSS initial-letter (see print-base.css).
+   Per-theme colour/face live in each theme.css. */
+.dropcap {
+  float: left;
+  font-size: 3.1em;
+  line-height: 1;
+  padding: 0.04em 0.08em 0 0;
+  margin: 0 0 -0.08em 0;
+}
+
 /* --- Title page --- */
 section.titlepage {
   text-align: center;

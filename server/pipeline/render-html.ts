@@ -12,7 +12,7 @@ import path from "node:path";
  * CSS and images are inlined via --embed-resources so the output stands alone.
  */
 export async function renderHtml(book: Book, target: Target = "html"): Promise<string> {
-  const ws = await makeWorkspace(book);
+  const ws = await makeWorkspace(book, target);
   try {
     const md = assembleMarkdown(book, target);
     const css = themeCssFiles(book.meta.theme);

@@ -48,6 +48,21 @@ img {
   max-width: 100%;
 }
 
+/* Drop cap (print): a 3-line float sunk cap. We do NOT use CSS initial-letter
+   here even though the print engine is Chromium: Chromium reports @supports
+   (initial-letter: 3) === true but does not actually render it on a span (proven
+   on a rendered proof — the cap comes out inline-sized), so the @supports gate is
+   a trap. The float is reliable; print-base is injected after the theme CSS, so
+   this re-seats base.css's 2-line metrics for the 11pt/1.4 print leading:
+   font-size ≈ (cap-height 0.7 + 2 × 1.4 leading) / 0.7 ≈ 5em for a 3-line cap.
+   Colour (Decorative) and weight (Modern) still come from the theme .dropcap. */
+.dropcap {
+  font-size: 5em;
+  line-height: 1;
+  padding: 0.02em 0.1em 0 0;
+  margin: 0 0 -0.12em 0;
+}
+
 /* Front matter shouldn't push down like chapters. */
 section.titlepage > h1,
 section.copyright > h1,

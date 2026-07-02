@@ -104,18 +104,31 @@ export function assembleCleanMarkdown(book: Book): string {
 }
 
 /** Build the Pandoc metadata object (dumped to a YAML file passed with --metadata-file). */
-export function buildPandocMeta(book: Book): Record<string, unknown> {
+export function buildPandocMeta(book: Book, target: Target = "html"): Record<string, unknown> {
   const m = book.meta;
   const theme = getTheme(m.theme);
   const ty = book.typography ?? {};
+  // Subtitle carries into export metadata per format:
+  //  - EPUB: structured `title` list → OPF `dc:title` refinements (main/subtitle),
+  //    the EPUB 3 convention. Our own title page still shows it (title-page suppressed).
+  //  - DOCX: a `subtitle` field → Pandoc renders a Subtitle-styled line in the title block.
+  //  - HTML/print: plain string title (keeps <title> clean); our generated title
+  //    page already renders the subtitle line, so nothing else is needed.
   const meta: Record<string, unknown> = {
-    title: m.title,
+    title:
+      target === "epub" && m.subtitle
+        ? [
+            { type: "main", text: m.title },
+            { type: "subtitle", text: m.subtitle },
+          ]
+        : m.title,
     author: [m.author],
     lang: m.language,
     // filter inputs — typography may override the theme's defaults
     scene_ornament: ty.sceneOrnament || theme.sceneOrnament,
     dropcap: (ty.dropcap ?? theme.dropcap) ? "true" : "false",
   };
+  if (target === "docx" && m.subtitle) meta.subtitle = m.subtitle;
   if (m.publisher) meta.publisher = m.publisher;
   if (m.description) meta.description = m.description;
   // NB: `rights` is intentionally NOT set here. Pandoc's EPUB writer renders it

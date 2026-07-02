@@ -96,8 +96,28 @@ interface Margins {
   inner: number; // binding (gutter) side — larger
 }
 
-function margins(gutter: number): Margins {
-  return { top: 0.7, bottom: 0.7, outer: 0.55, inner: gutter };
+/**
+ * Page margins for a trim. The outer margin widens on larger trims so the text
+ * column (measure) stays readable instead of running edge-to-edge: at 11pt a
+ * single column wants ~65–75 characters (~4.75in), but a fixed 0.55in outer on
+ * 8.5×11 yields a ~7.3in / 100+ char measure. We cap the measure and push the
+ * slack to the outer margin (the gutter/inner stays fixed for KDP binding).
+ * See reviews/2026-07-02-creative-lens-fable5.md issue #3.
+ */
+const MAX_MEASURE = 4.75; // inches — target max text-column width
+const MIN_OUTER = 0.5; // inches — never tighter than this on the outer edge
+
+function margins(gutter: number, trim: Trim): Margins {
+  const measureAtMinOuter = trim.w - gutter - MIN_OUTER;
+  const outer = measureAtMinOuter > MAX_MEASURE ? trim.w - gutter - MAX_MEASURE : MIN_OUTER;
+  // Vertical margins grow gently with page height so tall pages aren't cramped.
+  const vert = Math.min(1.0, Math.max(0.7, trim.h * 0.09));
+  return {
+    top: Math.round(vert * 1000) / 1000,
+    bottom: Math.round(vert * 1000) / 1000,
+    outer: Math.round(outer * 1000) / 1000,
+    inner: gutter,
+  };
 }
 
 function cssString(s: string): string {
@@ -125,7 +145,7 @@ function headValue(kind: HeadContent, author: string, title: string): string | n
  */
 export function buildPageCss(meta: BookMeta, opts: PrintOptions, gutter: number): string {
   const t = getTrim(opts.trim);
-  const m = margins(gutter);
+  const m = margins(gutter, t);
   const author = cssString(meta.author);
   const title = cssString(meta.title);
   const layout = getLayout(opts.layout);

@@ -31,9 +31,31 @@ h1.backmatter {
   margin: 0 0 1em;
 }
 
+/* Contemporary jacket lockup: a large, light roman subtitle under a genuinely
+   bold title. The h1 companion supplies the weight contrast (base.css forces
+   h1 to normal weight, which would flatten the pairing). */
+section.titlepage > h1 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.tp-subtitle {
+  font-style: normal;
+  font-weight: 300;
+  font-size: 1.25em;
+  letter-spacing: 0.01em;
+  margin-top: 0.5em;
+}
+
 .tp-author {
   font-weight: 600;
   letter-spacing: 0.04em;
+}
+
+/* A sans drop cap only reads as intentional at bold weight; re-seated for the
+   1.6 body leading ((0.7 + 1.6) / 0.7 ≈ 3.2em). */
+.dropcap {
+  font-size: 3.2em;
+  font-weight: 700;
 }
 
 .scene-break {

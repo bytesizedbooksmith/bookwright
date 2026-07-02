@@ -36,6 +36,8 @@ import {
   scaffold,
   type Placement,
 } from "./matter.ts";
+import { isAppError } from "./errors.ts";
+import { checkPandoc } from "./preflight.ts";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -80,6 +82,11 @@ async function wrap(res: Response, fn: () => Promise<void>) {
   try {
     await fn();
   } catch (e) {
+    if (isAppError(e)) {
+      console.error(`[${e.code}] ${e.userMessage}${e.detail ? `\n${e.detail}` : ""}`);
+      res.status(e.status).json({ error: e.userMessage, code: e.code, detail: e.detail });
+      return;
+    }
     console.error(e);
     res.status(400).json({ error: e instanceof Error ? e.message : String(e) });
   }
@@ -104,7 +111,11 @@ function applyTypography(book: { typography: any }, req: Request): void {
 }
 
 export function registerApi(app: Express): void {
-  app.get("/api/health", (_req, res) => res.json({ ok: true, name: "byte-sized-book-formatter", version: "1.1.0" }));
+  app.get("/api/health", (_req, res) =>
+    wrap(res, async () => {
+      res.json({ ok: true, name: "byte-sized-book-formatter", version: "1.1.0", pandoc: await checkPandoc() });
+    }),
+  );
   app.get("/api/themes", (_req, res) => res.json(themeList()));
   app.get("/api/presets", (_req, res) => res.json(Object.values(PRESETS)));
   app.get("/api/matter-types", (_req, res) => res.json(MATTER_TYPES));

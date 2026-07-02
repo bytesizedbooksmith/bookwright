@@ -87,8 +87,12 @@ function typographyCss(book: Book): string {
 
   const bodyDecls: string[] = [];
   if (ty.bodyFont) bodyDecls.push(`font-family: ${familyValue(ty.bodyFont)} !important;`);
-  if (ty.fontSize) bodyDecls.push(`font-size: ${ty.fontSize};`);
-  if (ty.lineHeight) bodyDecls.push(`line-height: ${ty.lineHeight};`);
+  // !important so the author's size/leading survive the print path, where
+  // print-base.css (body { font-size: 11pt; line-height: 1.4 }) is injected AFTER
+  // this stylesheet and would otherwise win at equal specificity. See
+  // reviews/2026-07-02-creative-lens-fable5.md issue #2.
+  if (ty.fontSize) bodyDecls.push(`font-size: ${ty.fontSize} !important;`);
+  if (ty.lineHeight) bodyDecls.push(`line-height: ${ty.lineHeight} !important;`);
   if (bodyDecls.length) out.push(`body { ${bodyDecls.join(" ")} }`);
 
   if (ty.headingFont) {

@@ -25,10 +25,25 @@ h1.backmatter {
   margin: 0 0 1.2em;
 }
 
+/* Subtitle echoes the chapter-title voice: centered, letterspaced small caps
+   (roman, not the base italic). lowercase forces even small caps instead of
+   mixed-height "ransom note" caps. */
+.tp-subtitle {
+  font-style: normal;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.14em;
+  font-size: 1.05em;
+  margin-top: 0.8em;
+}
+
 .tp-author {
   font-variant: small-caps;
   letter-spacing: 0.1em;
 }
+
+/* Classic uses the body serif in body ink for its drop cap — the .dropcap float
+   in base.css is exactly right, so there is intentionally no override here. */
 
 .scene-break {
   letter-spacing: 0.6em;

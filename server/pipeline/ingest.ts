@@ -14,6 +14,7 @@ import type {
   Typography,
 } from "./types.ts";
 import { extractTitle, slugify, splitOnH1, uniqueId } from "./util.ts";
+import { AppError } from "../errors.ts";
 
 const THEMES: ThemeName[] = ["classic", "modern", "decorative"];
 
@@ -243,7 +244,22 @@ export async function loadBook(inputPath: string, overrides?: Partial<BookMeta>)
     return { book: { meta, sections, baseDir: abs, fonts: [], styles: {}, typography: {} }, warnings };
   }
 
-  const cfg = (yaml.load(await fs.readFile(cfgPath, "utf8")) as RawConfig) ?? {};
+  let cfg: RawConfig;
+  try {
+    cfg = (yaml.load(await fs.readFile(cfgPath, "utf8")) as RawConfig) ?? {};
+  } catch (e) {
+    if ((e as Error).name === "YAMLException") {
+      throw new AppError(
+        "BAD_CONFIG",
+        `Couldn't parse ${path.basename(cfgPath)} — it isn't valid YAML. Check the indentation and punctuation near the line it reports.`,
+        { detail: (e as Error).message, cause: e },
+      );
+    }
+    throw new AppError("IO_ERROR", `Couldn't read ${path.basename(cfgPath)}.`, {
+      detail: (e as Error).message,
+      cause: e,
+    });
+  }
   const meta = normalizeMeta(cfg, overrides);
   const used = new Set<string>();
   const sections: Section[] = [];

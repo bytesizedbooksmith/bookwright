@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import open from "open";
 import { registerApi } from "./api.ts";
+import { checkPandoc, pandocBanner } from "./preflight.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(__dirname, "..");
@@ -25,6 +26,14 @@ if (!isDev) {
 app.listen(PORT, () => {
   const url = isDev ? "http://localhost:5173" : `http://localhost:${PORT}`;
   console.log(`\n  Byte-Sized Book Formatter running at ${url}\n`);
+  // Non-fatal: verify Pandoc 3.x is present and warn up front if not, rather than
+  // letting the user discover it as an opaque error on their first export.
+  checkPandoc()
+    .then((s) => {
+      const banner = pandocBanner(s);
+      if (banner) console.warn(`${banner}\n`);
+    })
+    .catch(() => {});
   if (!isDev && process.env.BOOK_FORMATTER_NO_OPEN !== "1") {
     open(url).catch(() => {});
   }

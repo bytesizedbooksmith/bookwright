@@ -71,7 +71,7 @@ async function writeEpubMetadata(book: Book, dir: string): Promise<string | null
 /** Render an EPUB 3 file as a Buffer, applying the chosen distribution preset. */
 export async function renderEpub(book: Book, presetName: PresetName): Promise<EpubResult> {
   const preset = getPreset(presetName);
-  const ws = await makeWorkspace(book);
+  const ws = await makeWorkspace(book, "epub");
   const outPath = path.join(ws.dir, "book.epub");
   try {
     const md = assembleMarkdown(book, "epub");
