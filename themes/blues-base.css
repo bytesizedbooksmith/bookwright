@@ -1,0 +1,195 @@
+/* ============================================================
+   Byte-Sized Book Formatter — blues base (paged media)
+   Injected only for the blues export, after base.css and the
+   book's own theme, so it wins on equal specificity. The
+   dynamic @page rules (geometry, running head) are built per
+   render in server/blues.ts.
+
+   Keep it plain. Decoration competes with handwriting.
+   ============================================================ */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+main.book {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Serif body, 14pt, generous leading. Black on white — this gets marked up in
+   pencil, and grey text under a pencil line is unreadable. */
+body {
+  color: #000;
+  font-size: 14pt;
+  line-height: 1.6;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+/* Standard fiction setting: first line indented, no space between paragraphs.
+   The first paragraph after a heading or scene break is flush, as in print. */
+section.chapter p {
+  margin: 0;
+  text-indent: 1.5em;
+  orphans: 3;
+  widows: 3;
+}
+section.chapter > h1 + p,
+section.chapter .chapter-subtitle + p,
+.scene-break + p {
+  text-indent: 0;
+}
+
+/* Chapter openers: new page, 20pt title, no drop cap, no flourish.
+   Overrides print-base's 1.6in sink and the themes' decorative treatments. */
+section.chapter > h1 {
+  font-size: 20pt;
+  font-weight: normal;
+  margin: 0 0 0.2em;
+  padding: 0;
+  text-align: left;
+  text-transform: none;
+  font-variant: normal;
+  letter-spacing: 0;
+  border: none;
+}
+section.chapter > h1::before,
+section.chapter > h1::after {
+  content: none !important;
+}
+
+/* The descriptive title sits under "Chapter N" and stays with it. Left-aligned
+   to match the title above it — the themes centre their chapter furniture, and
+   a centred subtitle under a flush-left title reads as a mistake. */
+.chapter-subtitle,
+.chapter-subtitle p {
+  font-size: 13pt;
+  font-style: italic;
+  color: #333;
+  margin: 0 0 1.4em;
+  text-align: left;
+  text-indent: 0;
+  break-inside: avoid;
+  break-after: avoid;
+}
+
+h1,
+h2,
+h3 {
+  break-after: avoid;
+}
+
+/* No drop caps in a blues — the theme may ask for one; it is refused here as
+   well as via the `dropcap` metadata, because a 5em cap eats writing space. */
+.dropcap {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  float: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: inherit !important;
+  font-weight: inherit !important;
+}
+
+/* Scene breaks: a plain centred asterism, never the theme's ornament. */
+.scene-break {
+  break-inside: avoid;
+  text-align: center;
+  margin: 1.2em 0;
+  font-size: 14pt;
+  letter-spacing: 0.4em;
+  color: #000;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* ---- Cover page ----
+   base.css sets `p, li { text-align-last: left }` so the last line of justified
+   body text stays ragged. Every line of the cover is a last line, so without the
+   override below the whole block renders flush left however it is aligned. This
+   follows the same pattern base.css already uses for titlepage / dedication /
+   epigraph and the centred embedded documents. */
+section.blues-cover {
+  text-align: center;
+  padding-top: 2.2in;
+}
+section.blues-cover,
+section.blues-cover * {
+  text-align-last: center;
+}
+section.blues-cover p {
+  text-align: center;
+  text-indent: 0;
+}
+section.blues-cover > h1 {
+  display: none; /* the generated block below carries its own title line */
+}
+.blues-cover-title {
+  font-size: 22pt;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.5em;
+}
+.blues-cover-author {
+  font-size: 14pt;
+  margin: 0 0 2em;
+}
+.blues-cover-stamp {
+  font-size: 16pt;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.3em;
+}
+.blues-cover-date {
+  font-size: 12pt;
+  color: #444;
+  margin: 0 0 2.4em;
+}
+.blues-cover-facts {
+  font-size: 11pt;
+  color: #333;
+  line-height: 1.9;
+  margin: 0;
+}
+.blues-cover-facts .src {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 9.5pt;
+  color: #666;
+}
+
+/* ---- Table of contents (orientation only — no links, no leaders) ---- */
+section.blues-toc > h1 {
+  font-size: 16pt;
+  font-weight: normal;
+  margin: 0 0 1.2em;
+  text-align: left;
+}
+.blues-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 11.5pt;
+  line-height: 1.9;
+}
+.blues-toc-list li {
+  display: flex;
+  align-items: baseline;
+  break-inside: avoid;
+}
+.blues-toc-list .n {
+  flex: 0 0 2.6em;
+  color: #555;
+}
+.blues-toc-list .t {
+  flex: 1 1 auto;
+  padding-right: 0.6em;
+}
+.blues-toc-list .p {
+  flex: 0 0 auto;
+  color: #555;
+  font-variant-numeric: tabular-nums;
+}
