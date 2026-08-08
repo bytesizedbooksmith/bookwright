@@ -1,6 +1,11 @@
 node_modules/
 web/dist/
 output/
+
+# Third-party EPUBCheck (~33 MB). Optional: validation falls back to the
+# built-in structural checks when it's absent. Install with:
+#   https://github.com/w3c/epubcheck/releases → unzip into vendor/epubcheck/
+vendor/
 *.log
 .DS_Store
 .tmp/

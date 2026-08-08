@@ -50,11 +50,22 @@ function safeClass(c: string): string {
  * Build CSS for the book's custom fonts + per-class style overrides.
  * - html/print: fonts are inlined as base64 data URIs (self-contained).
  * - epub: fonts are referenced by filename (Pandoc embeds them via --epub-embed-font).
+ *
+ * `embedFonts: false` (the KDP preset) drops the @font-face blocks entirely. It
+ * has to be decided here, not just at the Pandoc flag: emitting @font-face while
+ * skipping --epub-embed-font would leave every src pointing at a file that isn't
+ * in the archive. The per-class font-family rules are left alone — an unavailable
+ * family falls back to the reader's default, which is what that preset wants.
  */
-export async function buildDocCss(book: Book, target: "html" | "epub"): Promise<string> {
+export async function buildDocCss(
+  book: Book,
+  target: "html" | "epub",
+  opts: { embedFonts?: boolean } = {},
+): Promise<string> {
   const parts: string[] = [];
+  const embedFonts = opts.embedFonts ?? true;
 
-  for (const f of book.fonts) {
+  for (const f of embedFonts ? book.fonts : []) {
     let src: string;
     if (target === "epub") {
       // Pandoc embeds fonts under EPUB/fonts/ and writes our CSS to EPUB/styles/,

@@ -77,7 +77,7 @@ export async function renderEpub(book: Book, presetName: PresetName): Promise<Ep
     const md = assembleMarkdown(book, "epub");
     const cssFiles = themeCssFiles(book.meta.theme);
     // Custom fonts + per-class style overrides.
-    const docCss = await buildDocCss(book, "epub");
+    const docCss = await buildDocCss(book, "epub", { embedFonts: preset.embedFonts });
     if (docCss.trim()) {
       const docCssPath = path.join(ws.dir, "doc.css");
       await fs.writeFile(docCssPath, docCss, "utf8");
@@ -99,9 +99,13 @@ export async function renderEpub(book: Book, presetName: PresetName): Promise<Ep
     const epubMetaPath = await writeEpubMetadata(book, ws.dir);
     if (epubMetaPath) args.push(`--epub-metadata=${epubMetaPath}`);
     if (book.coverPath) args.push(`--epub-cover-image=${book.coverPath}`);
-    // Embed the book's custom fonts so journals/letters render everywhere.
-    for (const f of epubFontFiles(book)) args.push(`--epub-embed-font=${f}`);
-    void preset.embedFonts;
+    // Embed the book's custom fonts so journals/letters render everywhere — unless
+    // the preset opts out (KDP bills per MB on delivery, so it ships without them
+    // and lets the reader's own fonts apply). buildDocCss above drops the matching
+    // @font-face rules for the same reason, so the two can never disagree.
+    if (preset.embedFonts) {
+      for (const f of epubFontFiles(book)) args.push(`--epub-embed-font=${f}`);
+    }
 
     await runPandoc(args, md);
     let buffer: Buffer = await fs.readFile(outPath);

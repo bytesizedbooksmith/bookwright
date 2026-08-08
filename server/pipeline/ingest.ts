@@ -35,6 +35,7 @@ interface RawConfig {
   frontmatter?: string[];
   chapters?: string;
   backmatter?: string[];
+  exclude?: string[]; // glob patterns of markdown to keep out of the chapter list
   fonts?: Array<{ file: string; family: string; weight?: string | number; style?: string }>;
   styles?: Record<string, StyleDef>;
   typography?: Typography;
@@ -180,12 +181,132 @@ async function sectionFromFile(
   };
 }
 
-async function listMarkdown(dir: string): Promise<string[]> {
+/**
+ * Markdown files that must never be read as chapters. Many books set
+ * `chapters: .`, which makes the book folder itself the chapters directory — so
+ * any sidecar dropped beside the manuscript would silently become a chapter,
+ * sort into place by filename, and ship inside the EPUB. Matched case-insensitively.
+ */
+const RESERVED_MARKDOWN = new Set([
+  // Sidecars the toolchain itself writes next to a manuscript.
+  "lineage.md",
+  "readme.md",
+  "notes.md",
+  "changelog.md",
+  "todo.md",
+  // The front/back matter vocabulary (mirrors templates/matter/). A file named
+  // after one of these is matter by any reading, never a chapter — and two live
+  // books already had a loose copyright.md being swept in as a final chapter.
+  "copyright.md",
+  "dedication.md",
+  "epigraph.md",
+  "acknowledgments.md",
+  "foreword.md",
+  "preface.md",
+  "about-the-author.md",
+  "also-by.md",
+  "newsletter.md",
+  "sneak-peek.md",
+]);
+
+/**
+ * Translate one `exclude:` glob (`*`, `?`, `**`) into an anchored regex.
+ * Scanned character by character rather than by chained replaces: a sentinel
+ * approach has to survive its own escaping pass, and gets that wrong quietly.
+ */
+function globToRegExp(glob: string): RegExp {
+  const SPECIAL = /[.+^${}()|[\]\\]/;
+  let body = "";
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob[i];
+    if (c === "*") {
+      if (glob[i + 1] === "*") {
+        body += ".*"; // ** crosses separators
+        i++;
+      } else {
+        body += "[^/]*";
+      }
+    } else if (c === "?") {
+      body += ".";
+    } else {
+      body += SPECIAL.test(c) ? `\\${c}` : c;
+    }
+  }
+  return new RegExp(`^${body}$`, "i");
+}
+
+/**
+ * Sidecars are excluded by NAME, never by content, so a genuinely-named chapter
+ * can't be dropped: `_`/`.` prefixes, the reserved vocabulary above, and any
+ * `exclude:` glob the book declares. Arbitrary names we can't know about are
+ * handled by the outlier warning below rather than by guessing.
+ */
+function isChapterCandidate(name: string, excludes: RegExp[]): boolean {
+  if (name.startsWith("_") || name.startsWith(".")) return false;
+  if (RESERVED_MARKDOWN.has(name.toLowerCase())) return false;
+  return !excludes.some((re) => re.test(name));
+}
+
+/**
+ * The filename "shape" — digit runs collapsed to `#`, so `chapter-07.md` and
+ * `chapter-21.md` share one key. Used only to spot the odd file out.
+ */
+function nameShape(name: string): string {
+  return name.toLowerCase().replace(/\d+/g, "#");
+}
+
+/**
+ * Files that survived the filters but don't match the folder's dominant naming
+ * pattern. These are still ingested as chapters — we can't know they aren't —
+ * but they get named in a warning, because silent inclusion is the failure that
+ * ships to a store.
+ */
+function shapeOutliers(names: string[]): string[] {
+  if (names.length < 3) return [];
+  const counts = new Map<string, number>();
+  for (const n of names) counts.set(nameShape(n), (counts.get(nameShape(n)) ?? 0) + 1);
+  const [shape, n] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (n / names.length < 0.6) return []; // no dominant convention — don't guess
+  return names.filter((x) => nameShape(x) !== shape);
+}
+
+/**
+ * Chapter files in a directory, plus the markdown deliberately skipped and the
+ * files that look out of place. Callers surface both: silence here is how a
+ * mis-named chapter vanishes, or a stray note ships as chapter 27.
+ */
+async function listMarkdown(
+  dir: string,
+  excludes: RegExp[] = [],
+): Promise<{ files: string[]; skipped: string[]; outliers: string[] }> {
   const entries = await fs.readdir(dir);
-  return entries
-    .filter((e) => /\.(md|markdown)$/i.test(e))
-    .sort((a, b) => a.localeCompare(b, "en", { numeric: true }))
-    .map((e) => path.join(dir, e));
+  const markdown = entries.filter((e) => /\.(md|markdown)$/i.test(e));
+  const byName = (a: string, b: string) => a.localeCompare(b, "en", { numeric: true });
+  const kept = markdown.filter((e) => isChapterCandidate(e, excludes)).sort(byName);
+  return {
+    files: kept.map((e) => path.join(dir, e)),
+    skipped: markdown.filter((e) => !isChapterCandidate(e, excludes)).sort(byName),
+    outliers: shapeOutliers(kept),
+  };
+}
+
+/** Surface skipped sidecars and odd-looking chapters on the ingest warnings. */
+function warnChapterFiles(
+  r: { skipped: string[]; outliers: string[] },
+  warnings: { message: string }[],
+): void {
+  if (r.skipped.length) {
+    warnings.push({
+      message: `Skipped ${r.skipped.length} non-chapter file${r.skipped.length === 1 ? "" : "s"} in the chapters folder: ${r.skipped.join(", ")}`,
+    });
+  }
+  if (r.outliers.length) {
+    warnings.push({
+      message:
+        `Read as chapters but they don't match this folder's naming pattern: ${r.outliers.join(", ")}. ` +
+        `If these aren't chapters, rename them with a leading "_" or add them to "exclude:" in book.yaml.`,
+    });
+  }
 }
 
 /** Load a book from a folder (with book.yaml) or a single markdown file. */
@@ -242,7 +363,9 @@ export async function loadBook(inputPath: string, overrides?: Partial<BookMeta>)
       : null;
 
   if (!cfgPath) {
-    const files = await listMarkdown(abs);
+    const listing = await listMarkdown(abs);
+    warnChapterFiles(listing, warnings);
+    const files = listing.files;
     const used = new Set<string>();
     const sections: Section[] = [];
     for (const f of files) {
@@ -311,8 +434,9 @@ export async function loadBook(inputPath: string, overrides?: Partial<BookMeta>)
   const chaptersRef = cfg.chapters ? path.resolve(abs, cfg.chapters) : null;
   if (chaptersRef && (await exists(chaptersRef))) {
     if (await isDir(chaptersRef)) {
-      const files = await listMarkdown(chaptersRef);
-      for (const f of files) {
+      const listing = await listMarkdown(chaptersRef, (cfg.exclude ?? []).map(globToRegExp));
+      warnChapterFiles(listing, warnings);
+      for (const f of listing.files) {
         sections.push(await sectionFromFile(f, "chapter", used, { toc: true, showTitle: true }));
       }
     } else {
