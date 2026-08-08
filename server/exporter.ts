@@ -52,10 +52,14 @@ export async function prepareExport(book: Book, bookDir: string, opts: PrepareOp
   return { sync, dest, date: opts.date ?? today(), round, bookDir };
 }
 
-/** The round as it stands, whether or not this run incremented it. */
+/**
+ * The round as it stands, whether or not this run incremented it. Reports the
+ * stored value rather than the next one — claiming a round that hasn't started
+ * would put a number on the cover that nothing else agrees with.
+ */
 export function currentRound(prep: PreparedExport): { round: number; maxRounds: number } {
   return {
-    round: prep.round?.round ?? (prep.sync.file.blues_round ?? 0) + 1,
+    round: prep.round?.round ?? prep.sync.file.blues_round ?? 0,
     maxRounds: prep.round?.maxRounds ?? prep.sync.file.max_rounds ?? 3,
   };
 }
