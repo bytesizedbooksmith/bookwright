@@ -6,6 +6,7 @@ import { renderHtml } from "./render-html.ts";
 import { getBrowser } from "./render-pdf.ts";
 import { ROOT, THEMES_DIR } from "./paths.ts";
 import { buildBluesPageCss, runningHead, type BluesOptions } from "../blues.ts";
+import { countWords } from "../versioning.ts";
 
 const POLYFILL = path.join(ROOT, "node_modules", "pagedjs", "dist", "paged.polyfill.min.js");
 const BLUES_BASE = path.join(THEMES_DIR, "blues-base.css");
@@ -30,18 +31,6 @@ export interface BluesMeta {
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-/**
- * Word count, per the method fixed in version.json: whitespace-split tokens of
- * chapter title + subtitle + body, heading markers already stripped by ingest,
- * front and back matter excluded.
- */
-export function countWords(chapters: Section[]): number {
-  return chapters.reduce(
-    (n, s) => n + `${s.title} ${s.subtitle ?? ""} ${s.markdown}`.split(/\s+/).filter(Boolean).length,
-    0,
-  );
 }
 
 /** The generated cover. Everything on it is derived; nothing is typed by hand. */
