@@ -507,7 +507,7 @@ styles:
               <tr><td>Reading PDF</td><td>PDF</td><td>A screen/proof PDF (not print-ready trim — that's §15).</td></tr>
             </table>
             <p>Both EPUBs include your cover, a full table of contents (the formats KDP and Kobo require), and embedded
-              fonts. The generated <strong>title page</strong> carries your <em>series</em> line (e.g. “A Gadding Goose Novella”)
+              fonts. The generated <strong>title page</strong> carries your <em>series</em> line (e.g. “A Riverbend Novella”)
               and matches the on-screen preview, and the front matter is ordered the conventional way:
               <em>Title → Copyright → Contents → Dedication → Epigraph → chapters</em>. After an EPUB export, the app shows
               <strong>validation</strong> results.</p>
@@ -583,10 +583,10 @@ styles:
               your tablet can see (a synced cloud folder works well). That folder then becomes your to-do list: if three
               books are sitting in it, three books need reading. The choice is remembered for the next book.</p>
             <p>There's also a command line, so you can make one without opening the app:</p>
-            <pre><code>npm run blues -- --book "C:/path/to/Bk-1_The-Inn"</code></pre>
-            <pre><code>✓ The Inn That Wasn't There Yesterday — BLUES v6 (round 1 of 1)
+            <pre><code>npm run blues -- --book "C:/path/to/Bk-1_The-Book"</code></pre>
+            <pre><code>✓ The Book That Wasn't There Yesterday — BLUES v6 (round 1 of 1)
   44 pages · chapters 1–4 of 26
-  → OneDrive\Books to Review\the-inn_v6_2026-08-09_blues.pdf
+  → OneDrive\Books to Review\the-book_v6_2026-08-09_blues.pdf
   archived v5</code></pre>
             <p>Useful flags: <code>--pages 50</code> (how far to go), <code>--new-round</code> (start a new review
               round), <code>--note "…"</code> (a line for your lineage table), <code>--yes</code> (don't ask before
@@ -610,10 +610,10 @@ styles:
                 pass") so they sit alongside the automatic ones.</li>
             </ul>
             <h3>File names</h3>
-            <pre><code>the-inn_v6_2026-08-09_blues.pdf
-the-inn_v6_2026-08-09_print.pdf
-the-inn_v6_2026-08-09_kdp.epub
-the-inn_v6_2026-08-09.epub          ← universal</code></pre>
+            <pre><code>the-book_v6_2026-08-09_blues.pdf
+the-book_v6_2026-08-09_print.pdf
+the-book_v6_2026-08-09_kdp.epub
+the-book_v6_2026-08-09.epub          ← universal</code></pre>
             <p>Version first, so sorting by name sorts by version. Everything except the blues is written to your book's
               <code>_exports/</code> folder; the blues goes to your review folder, because it's the one file that has to
               travel to another device.</p>

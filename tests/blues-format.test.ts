@@ -1,9 +1,10 @@
-/* Phase 3 verification — blues format, acceptance tests 3-7 against Bk-1_The-Inn.
+/* Blues format — page geometry, the gutter, the running head and foot, --pages.
    Test 4 (the right 2.5in is empty) is measured geometrically: every laid-out box
    on every page is checked against the gutter edge, which is stricter and far
    faster than eyeballing a render. */
 import path from "node:path";
 import { promises as fs } from "node:fs";
+import { makeBookFixture } from "./fixtures/book.ts";
 import { loadBook } from "../server/pipeline/ingest.ts";
 import { renderBlues, buildBluesBook, paginate } from "../server/pipeline/render-blues.ts";
 import { getBrowser, closeBrowser } from "../server/pipeline/render-pdf.ts";
@@ -11,8 +12,8 @@ import { renderHtml } from "../server/pipeline/render-html.ts";
 import { buildBluesPageCss, PAGE, CONTENT_WIDTH, type BluesOptions } from "../server/blues.ts";
 import { ROOT, THEMES_DIR } from "../server/pipeline/paths.ts";
 
-const INN = "C:/AI Workspace/Books/Linfield/Series-1_Goose/Bk-1_The-Inn";
-const outDir = path.join(ROOT, "output", "phase3");
+// The book under test — the bundled sample unless BSBF_TEST_BOOK says otherwise.
+const outDir = path.join(ROOT, "output", "blues-format");
 await fs.mkdir(outDir, { recursive: true });
 
 let pass = 0;
@@ -21,39 +22,50 @@ const check = (label: string, ok: boolean, detail = "") => {
   console.log(`  ${ok ? "✓" : "✗"} ${label}${detail ? ` — ${detail}` : ""}`);
   ok ? pass++ : fail++;
 };
+/** Not applicable to this book. Reported, and counted as neither pass nor fail —
+ *  a check that quietly passes on an empty set is how a real bug hides. */
+const skip = (label: string, why: string) => console.log(`  ○ ${label} — skipped: ${why}`);
 
-const meta = JSON.parse(await fs.readFile(path.join(INN, "_meta", "version.json"), "utf8"));
+const fx = await makeBookFixture();
+const meta = JSON.parse(await fs.readFile(path.join(fx.bookDir, "_meta", "version.json"), "utf8"));
 const opts: BluesOptions = {
   version: meta.current_version,
   date: "2026-08-08",
   round: 1,
   maxRounds: meta.max_rounds,
-  sourceLabel: "Books/Linfield/Series-1_Goose/Bk-1_The-Inn",
+  sourceLabel: "Books/Author/Series/Bk-1_The-Book",
 };
 
-const { book } = await loadBook(INN);
+const { book } = await loadBook(fx.bookDir);
 
 // ---------------------------------------------------------------- full render
 console.log("\nFull book");
 const full = await renderBlues(book, opts);
-await fs.writeFile(path.join(outDir, "inn_blues_full.pdf"), full.buffer);
+await fs.writeFile(path.join(outDir, "blues-full.pdf"), full.buffer);
 console.log(`  ${full.meta.pages} pages · ${full.meta.chapters} chapters · ${full.meta.words.toLocaleString()} words`);
 check("7  front and back matter absent", (() => {
   const kinds = new Set(buildBluesBook(book, opts).book.sections.map((s) => s.className));
   return !kinds.has("copyright") && !kinds.has("titlepage");
 })());
-check("   word count matches the fixed method", full.meta.words === 52294, String(full.meta.words));
-check("   all 26 chapters present", full.meta.chapters === 26, String(full.meta.chapters));
+check("   word count matches the fixed method", full.meta.words === fx.facts.words, String(full.meta.words));
+check("   every chapter present", full.meta.chapters === fx.facts.chapters, String(full.meta.chapters));
 
-// ---------------------------------------------------------------- --pages 50
-console.log("\n--pages 50");
-const capped = await renderBlues(book, { ...opts, maxPages: 50 });
-await fs.writeFile(path.join(outDir, "inn_blues_p50.pdf"), capped.buffer);
+// ---------------------------------------------------------------- the page cap
+// A cap of about half the book, so truncation actually happens whatever the
+// book's length. Hard-coding 50 only exercises this on a full-length manuscript.
+const CAP = Math.max(1, Math.floor(full.meta.pages / 2));
+console.log(`\n--pages ${CAP}`);
+const capped = await renderBlues(book, { ...opts, maxPages: CAP });
+await fs.writeFile(path.join(outDir, "blues-capped.pdf"), capped.buffer);
 console.log(
-  `  ${capped.meta.pages} pages (cap 50, book runs ~${capped.meta.totalPages}) · chapters ${capped.meta.firstChapter}-${capped.meta.lastChapter} of ${capped.meta.totalChapters}`,
+  `  ${capped.meta.pages} pages (cap ${CAP}, book runs ~${capped.meta.totalPages}) · chapters ${capped.meta.firstChapter}-${capped.meta.lastChapter} of ${capped.meta.totalChapters}`,
 );
-check("6  stops at or under the cap", capped.meta.pages <= 50, `${capped.meta.pages} pages`);
-check("6  stopped on a chapter boundary, not mid-chapter", capped.meta.truncated && capped.meta.lastChapter < 26);
+check("6  stops at or under the cap", capped.meta.pages <= CAP, `${capped.meta.pages} pages`);
+check(
+  "6  stopped on a chapter boundary, not mid-chapter",
+  capped.meta.truncated && capped.meta.lastChapter < fx.facts.chapters,
+  `last chapter ${capped.meta.lastChapter} of ${fx.facts.chapters}`,
+);
 check("   full-book total reported for the cover", capped.meta.totalPages === full.meta.pages);
 
 // ------------------------------------------------- geometry + stamping checks
@@ -200,18 +212,22 @@ check("   no hyperlinks survive anywhere", stamps.anchors === 0, `${stamps.ancho
 
 const seq = stamps.chapterSeq.filter((c): c is number => c !== null);
 const monotonic = seq.every((c, i) => i === 0 || c >= seq[i - 1]);
-check("3  chapter-per-page runs 1..26 without going backwards", monotonic && seq[0] === 1 && seq[seq.length - 1] === 26);
+check("3  chapter-per-page runs 1..N without going backwards", monotonic && seq[0] === 1 && seq[seq.length - 1] === fx.facts.chapters);
 check("   cover and contents carry no chapter number", stamps.chapterSeq[0] === null && stamps.chapterSeq[1] === null);
 check(
   "5  every cover line is centred (align AND align-last)",
   stamps.coverParas > 0 && stamps.coverCentred === stamps.coverParas,
   `${stamps.coverCentred}/${stamps.coverParas}`,
 );
-check(
-  "   chapter subtitles align with their titles",
-  stamps.subtitles > 0 && stamps.subtitleLeft === stamps.subtitles,
-  `${stamps.subtitleLeft}/${stamps.subtitles}`,
-);
+if (stamps.subtitles === 0) {
+  skip("   chapter subtitles align with their titles", "this book has no chapter subtitles");
+} else {
+  check(
+    "   chapter subtitles align with their titles",
+    stamps.subtitleLeft === stamps.subtitles,
+    `${stamps.subtitleLeft}/${stamps.subtitles}`,
+  );
+}
 check(
   "   body text is ragged right with no hyphenation (SOP)",
   stamps.bodyParas > 0 && stamps.bodyRagged === stamps.bodyParas,
@@ -238,8 +254,8 @@ check("   the contents page has a foot", feet.stampedFeet[1] === "p 2", String(f
 check("3  the foot reads 'Ch N · p N' on body pages", feet.stampedFeet[2] === "Ch 1 · p 3", String(feet.stampedFeet[2]));
 check(
   "   every contents row carries a page number",
-  feet.tocNums.length === 26 && feet.tocNums.every((n) => /^\d+$/.test(n)),
-  `${feet.tocNums.filter((n) => n).length}/26 filled`,
+  feet.tocNums.length === fx.facts.chapters && feet.tocNums.every((n) => /^\d+$/.test(n)),
+  `${feet.tocNums.filter((n) => n).length}/${fx.facts.chapters} filled`,
 );
 check("   contents page numbers ascend", feet.tocNums.every((n, i) => i === 0 || Number(n) >= Number(feet.tocNums[i - 1])));
 

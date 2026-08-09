@@ -5,6 +5,17 @@ npm test              # everything, slowest last
 npm test -- blues     # only suites whose filename matches
 ```
 
+By default these run against the sample book in `samples/`, so they work on a
+fresh clone. To run the same checks against a full-length manuscript:
+
+```bash
+BSBF_TEST_BOOK="D:/books/Bk-1_My-Novel" npm test
+```
+
+Nothing asserts a specific title, word count or chapter count — those are
+measured from whichever book is in use. A three-chapter sample and a
+twenty-six-chapter novel both have to pass.
+
 These are plain scripts, not a test framework. They drive real Chromium renders,
 real Pandoc, and a real Express server, because most of what can break here is
 layout and file placement — things a mocked unit test would happily agree with
@@ -27,7 +38,7 @@ a claim that stopped being true rather than a stack trace.
 
 **Never touch the real books.** Every suite works on a disposable copy from
 `fixtures/book.ts` and asserts at the end that the real manuscript and the real
-review folder were untouched. `Bk-1_The-Inn` is live production data.
+review folder were untouched — a real manuscript under BSBF_TEST_BOOK is live production data.
 
 **Pin the fixture, don't inherit production state.** `fixtures/book.ts` rewrites
 `_meta/version.json` to a known shape. Earlier versions of these suites copied

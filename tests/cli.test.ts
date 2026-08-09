@@ -3,17 +3,21 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
-import { makeBookFixture } from "./fixtures/book.ts";
+import { makeBookFixture, sourceSnapshot } from "./fixtures/book.ts";
 import { readVersionFile, metaDir } from "../server/versioning.ts";
 import { ROOT } from "../server/pipeline/paths.ts";
+import { slugForFolder } from "../server/destinations.ts";
 
-const INN = "C:/AI Workspace/Books/Linfield/Series-1_Goose/Bk-1_The-Inn";
+// The book under test — the bundled sample unless BSBF_TEST_BOOK says otherwise.
 let pass = 0;
 let fail = 0;
 const check = (label: string, ok: boolean, detail = "") => {
   console.log(`  ${ok ? "✓" : "✗"} ${label}${detail ? ` — ${detail}` : ""}`);
   ok ? pass++ : fail++;
 };
+
+// Proof, at the end, that this suite never wrote back to the source book.
+const sourceBefore = await sourceSnapshot();
 
 function runCli(args: string[]): Promise<{ code: number; out: string }> {
   return new Promise((resolve) => {
@@ -33,6 +37,10 @@ function runCli(args: string[]): Promise<{ code: number; out: string }> {
 // real manuscript happens to be in.
 const fixture = await makeBookFixture({ bluesRound: 0 });
 const { bookDir, reviewDir } = fixture;
+const SLUG = slugForFolder(bookDir);
+const CH = fixture.facts.chapters;
+/** Escape a book's title/slug so it can go inside a RegExp. */
+const esc = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // ---------------------------------------------------------------- usage
 console.log("\nArgument handling");
@@ -57,11 +65,26 @@ check("exits clean", r1.code === 0, `code ${r1.code}`);
 
 const reviewFiles = (await fs.readdir(reviewDir)).filter((f) => f.endsWith(".pdf"));
 check("1  a PDF landed in the review folder", reviewFiles.length === 1, reviewFiles.join(", "));
-check("1  named per D3", reviewFiles[0] === "the-inn_v6_2026-08-08_blues.pdf" || /^the-inn_v6_\d{4}-\d{2}-\d{2}_blues\.pdf$/.test(reviewFiles[0]), reviewFiles[0]);
+check(
+  "1  named per D3",
+  new RegExp(`^${esc(SLUG)}_v6_\\d{4}-\\d{2}-\\d{2}_blues\\.pdf$`).test(reviewFiles[0]),
+  reviewFiles[0],
+);
 
 const lines = r1.out.trim().split("\n").filter((l) => l.trim());
-check("   line 1: title, version, round", /^✓ The Inn That Wasn't There Yesterday — BLUES v6 \(round 1 of 1\)$/.test(lines[0]), lines[0]);
-check("   line 2: pages and chapter range", /^\s+\d+ pages · chapters 1–\d+ of 26$/.test(lines[1]), lines[1]);
+check(
+  "   line 1: title, version, round",
+  new RegExp(`^✓ ${esc(fixture.facts.title)} — BLUES v6 \\(round 1 of 1\\)$`).test(lines[0]),
+  lines[0],
+);
+// "chapters 1–N of TOTAL" when the cap trimmed the book; plain "chapters 1–N"
+// when the whole thing fits. A short sample takes the second form, a novel the
+// first, so both are accepted.
+check(
+  "   line 2: pages and chapter range",
+  new RegExp(`^\\s+\\d+ pages · chapters 1–\\d+( of ${CH})?$`).test(lines[1]),
+  lines[1],
+);
 check("   line 3: the destination path", /^\s+→ .*Books to Review.*_blues\.pdf$/.test(lines[2]), lines[2]);
 check("   nothing else on the happy path", lines.length === 3, `${lines.length} lines`);
 check("6  stopped under the cap", Number(lines[1].match(/(\d+) pages/)![1]) <= 50);
@@ -86,8 +109,13 @@ check("   still one file at the top level", (await fs.readdir(reviewDir)).filter
 
 // ---------------------------------------------------------------- chapters
 console.log("\n--chapters and --note");
-const r4 = await runCli(["--book", bookDir, "--chapters", "2-4", "--note", "spot check", "--yes"]);
-check("renders a chapter range", /chapters 2–4 of 26/.test(r4.out), r4.out.trim().split("\n")[1]);
+const r4 = await runCli(["--book", bookDir, "--chapters", `2-${CH}`, "--note", "spot check", "--yes"]);
+// The range may itself be trimmed by the page cap, so only the start is pinned.
+check(
+  "renders a chapter range",
+  new RegExp(`chapters 2–\\d+ of ${CH}`).test(r4.out),
+  r4.out.trim().split("\n")[1],
+);
 const lin2 = await fs.readFile(path.join(metaDir(bookDir), "LINEAGE.md"), "utf8");
 check("--note lands in the Note column", /\|\s*spot check\s*\|/.test(lin2));
 
@@ -99,7 +127,7 @@ check("   and proceeds anyway", r5.code === 0 && /BLUES v6 \(round 2 of 1\)/.tes
 
 // ---------------------------------------------------------------- archiving
 console.log("\n12 a source edit archives the old blues");
-const ch = path.join(bookDir, "chapter-07.md");
+const ch = fixture.chapterFiles[fixture.chapterFiles.length - 1];
 await fs.writeFile(ch, (await fs.readFile(ch, "utf8")).replace("The", "One"), "utf8");
 const r6 = await runCli(["--book", bookDir, "--pages", "30", "--yes"]);
 check("version rolled to v7", /BLUES v7/.test(r6.out), r6.out.trim().split("\n")[0]);
@@ -110,12 +138,10 @@ const arch = await fs.readdir(path.join(reviewDir, "_archive"));
 check("   the v6 blues is in _archive/, not deleted", arch.some((f) => f.includes("_v6_")), arch.join(", "));
 
 // ---------------------------------------------------------------- safety
-// Only the version is asserted on the real book — its hash and round counter
-// legitimately move as genuine exports run.
-const realVf = await readVersionFile(INN);
-check("\n   the real Bk-1_The-Inn is untouched", realVf!.current_version === 6, `v${realVf!.current_version}`);
-const realReview = await fs.readdir("C:/Users/mrocz/OneDrive/Books to Review").catch(() => [] as string[]);
-check("   the real review folder still holds one blues", realReview.filter((f) => f.endsWith(".pdf")).length === 1, realReview.join(", "));
+// Everything above ran against a temp copy. A real book under BSBF_TEST_BOOK
+// legitimately HAS a _meta folder, so the invariant is not "no metadata" — it
+// is that nothing about the source changed.
+check("\n   the source book is unchanged", (await sourceSnapshot()) === sourceBefore);
 
 await fixture.cleanup();
 console.log(`\n${pass} passed, ${fail} failed`);

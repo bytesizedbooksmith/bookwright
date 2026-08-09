@@ -98,7 +98,7 @@ function normalizeMeta(cfg: RawConfig, overrides?: Partial<BookMeta>): BookMeta 
     }
   }
   // A blank/zero "Book #" means no book number — so the title page reads
-  // "A Gadding Goose Novella" rather than "… · Book 0". An explicitly cleared
+  // "A Riverbend Novella" rather than "… · Book 0". An explicitly cleared
   // field from the UI (key present but empty) also clears any stored value,
   // so the live preview reflects the empty field even before saving.
   const clearedIndex = overrides ? "series_index" in overrides && !overrides.series_index : false;

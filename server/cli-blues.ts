@@ -1,6 +1,6 @@
 // The blues CLI — the primary interface.
 //
-//   npm run blues -- --book "C:/AI Workspace/Books/.../Bk-1_The-Inn"
+//   npm run blues -- --book "C:/path/to/Bk-1_The-Book"
 //
 // This has to run without opening the web UI, because the web UI is on the
 // computer and the computer is where the distraction lives. So the happy path

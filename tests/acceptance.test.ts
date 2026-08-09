@@ -28,13 +28,15 @@ const check = (label: string, ok: boolean, detail = "") => {
 console.log("\n5  the cover page reports version, round, words, chapters, page range");
 const fx = await makeBookFixture();
 const { book } = await loadBook(fx.bookDir);
+const SOURCE_LABEL = "Books/Author/Series/Bk-1_The-Book";
+// Half the book, so the page range is exercised rather than skipped.
 const opts: BluesOptions = {
   version: 6,
   date: "2026-08-09",
   round: 1,
   maxRounds: 1,
-  sourceLabel: "Books/Linfield/Series-1_Goose/Bk-1_The-Inn",
-  maxPages: 50,
+  sourceLabel: SOURCE_LABEL,
+  maxPages: 4,
 };
 
 const bluesBook = buildBluesBook(book, opts).book;
@@ -63,13 +65,13 @@ const coverText = await page.evaluate(() => {
 console.log(`      "${coverText}"`);
 // Pandoc smart-quotes the apostrophe, so compare with curly quotes normalised.
 const flat = coverText.replace(/[‘’]/g, "'");
-check("title", flat.includes("The Inn That Wasn't There Yesterday"));
-check("author", coverText.includes("Ada Linfield"));
+check("title", flat.includes(fx.facts.title.replace(/[‘’]/g, "'")));
+check("author", coverText.includes(fx.facts.author));
 check("version", coverText.includes("BLUES v6"));
 check("date", coverText.includes("2026-08-09"));
-check("word count, by the fixed method", coverText.includes("52,294 words"));
-check("chapter count", coverText.includes("26 chapters"));
-check("source path", coverText.includes("Books/Linfield/Series-1_Goose/Bk-1_The-Inn"));
+check("word count, by the fixed method", coverText.includes(`${fx.facts.words.toLocaleString("en-US")} words`));
+check("chapter count", coverText.includes(`${fx.facts.chapters} chapters`));
+check("source path", coverText.includes(SOURCE_LABEL));
 check("round", coverText.includes("round 1 of 1"));
 check("page range, filled after pagination", /pages 1–\d+ of ~\d+/.test(coverText), coverText.match(/pages 1–\d+ of ~\d+/)?.[0] ?? "MISSING");
 await page.close();

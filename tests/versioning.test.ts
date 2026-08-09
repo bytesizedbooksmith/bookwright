@@ -1,10 +1,11 @@
 /* Phase 4 verification — version tracking (acceptance tests 8, 10, 11, 13 and
    the hash/adoption rules). Everything runs against throwaway copies; the real
-   Bk-1_The-Inn is only ever READ. */
+   the source book is only ever READ. */
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import { makeBookFixture, type Fixture } from "./fixtures/book.ts";
+import { makeBookFixture, sourceSnapshot, type Fixture } from "./fixtures/book.ts";
 import { loadBook } from "../server/pipeline/ingest.ts";
+import { slugForFolder } from "../server/destinations.ts";
 import {
   appendLineage,
   bumpRound,
@@ -22,7 +23,7 @@ import {
   today,
 } from "../server/versioning.ts";
 
-const INN = "C:/AI Workspace/Books/Linfield/Series-1_Goose/Bk-1_The-Inn";
+// The book under test — the bundled sample unless BSBF_TEST_BOOK says otherwise.
 let pass = 0;
 let fail = 0;
 const check = (label: string, ok: boolean, detail = "") => {
@@ -30,17 +31,24 @@ const check = (label: string, ok: boolean, detail = "") => {
   ok ? pass++ : fail++;
 };
 
-/** A disposable copy with metadata pinned to a known state — see fixtures/book.ts. */
+// Proof, at the end, that this suite never wrote back to the source book.
+const sourceBefore = await sourceSnapshot();
+
+/** Disposable copies with metadata pinned to a known state — see fixtures/book.ts. */
 const fixtures: Fixture[] = [];
-async function scratchInn(opts: Parameters<typeof makeBookFixture>[0] = {}): Promise<string> {
+async function scratchBook(opts: Parameters<typeof makeBookFixture>[0] = {}): Promise<Fixture> {
   const f = await makeBookFixture(opts);
   fixtures.push(f);
-  return f.bookDir;
+  return f;
 }
+
+const seed = await scratchBook();
+const SLUG = slugForFolder(seed.bookDir);
+const facts = seed.facts;
 
 // ---------------------------------------------------------------- hashing
 console.log("\nHashing");
-const { book: inn } = await loadBook(INN);
+const { book: inn } = await loadBook(seed.bookDir);
 const chapters = chaptersOf(inn);
 const h1 = hashChapters(chapters);
 const h2 = hashChapters(chapters);
@@ -51,16 +59,18 @@ check("full digest stored, short form for display", shortHash(h1).length === 8, 
 const crlf = chapters.map((s) => ({ ...s, markdown: s.markdown.replace(/\n/g, "\r\n") }));
 check("line endings do not change the hash", hashChapters(crlf) === h1);
 
-const edited = chapters.map((s, i) => (i === 3 ? { ...s, markdown: s.markdown.replace("the", "teh") } : s));
+// The LAST chapter, so this works on a three-chapter sample as well as a novel.
+const last = chapters.length - 1;
+const edited = chapters.map((s, i) => (i === last ? { ...s, markdown: s.markdown.replace("the", "teh") } : s));
 check("one changed word DOES change the hash", hashChapters(edited) !== h1);
 
 const retitled = chapters.map((s, i) => (i === 0 ? { ...s, subtitle: "Something Else" } : s));
 check("a changed heading changes the hash", hashChapters(retitled) !== h1);
-check("word count matches the fixed method", countWords(chapters) === 52294, String(countWords(chapters)));
+check("word count matches the fixture", countWords(chapters) === facts.words, String(countWords(chapters)));
 
 // ---------------------------------------------------------------- adoption
 console.log("\nAdoption of the hand-seeded file (the hash_note case)");
-const dirA = await scratchInn();
+const dirA = seed.bookDir;
 const before = await readVersionFile(dirA);
 console.log(`  stored: v${before!.current_version} hash=${String(before!.current_source_hash).slice(0, 20)}…`);
 const s1 = await syncVersion(inn, dirA);
@@ -72,15 +82,15 @@ check("   canonical hash written back", /^sha256:[0-9a-f]{64}$/.test(afterA!.cur
 check("   hash_note cleared once the handover happened", afterA!.hash_note === undefined);
 check("   v1-v5 history preserved", afterA!.history.length === 6, `${afterA!.history.length} entries`);
 check("   reconstructed flags left intact", afterA!.history[0].reconstructed === true);
-check("   max_rounds preserved (1 for this book)", afterA!.max_rounds === 1, String(afterA!.max_rounds));
+check("   max_rounds preserved", afterA!.max_rounds === 1, String(afterA!.max_rounds));
 check("   hand-written word_count_method preserved", typeof afterA!.word_count_method === "string");
 
 // ---------------------------------------------------------------- unchanged
 console.log("\nSecond export, source untouched");
 const s2 = await syncVersion(inn, dirA);
 check("9  same version, no new history entry", s2.version === 6 && !s2.changed && !s2.adopted);
-recordExport(s2.entry, "blues", "the-inn_v6_2026-08-08_blues.pdf");
-recordExport(s2.entry, "epub", "the-inn_v6_2026-08-08.epub");
+recordExport(s2.entry, "blues", `${SLUG}_v6_2026-08-08_blues.pdf`);
+recordExport(s2.entry, "epub", `${SLUG}_v6_2026-08-08.epub`);
 await commitSync(dirA, s2);
 const afterB = await readVersionFile(dirA);
 const v6 = afterB!.history.find((e) => e.version === 6)!;
@@ -91,7 +101,7 @@ check("   an artifact never made is not", priorExport(v6, "docx") === null);
 
 // ---------------------------------------------------------------- changed
 console.log("\nOne word changed in one chapter");
-const chFile = path.join(dirA, "chapter-07.md");
+const chFile = seed.chapterFiles[seed.chapterFiles.length - 1];
 const orig = await fs.readFile(chFile, "utf8");
 await fs.writeFile(chFile, orig.replace("The", "One"), "utf8");
 const { book: edited2 } = await loadBook(dirA);
@@ -118,11 +128,11 @@ check("13 the warning names the round and the cap", !!warn && warn.includes("ROU
 // ---------------------------------------------------------------- lineage
 console.log("\nLINEAGE.md");
 const before2 = await fs.readFile(path.join(metaDir(dirA), "LINEAGE.md"), "utf8");
-await appendLineage(dirA, { date: today(), version: 6, artifact: "blues", words: 52294, note: "round 1" });
-await appendLineage(dirA, { date: today(), version: 6, artifact: "epub", words: 52294 });
+await appendLineage(dirA, { date: today(), version: 6, artifact: "blues", words: facts.words, note: "round 1" });
+await appendLineage(dirA, { date: today(), version: 6, artifact: "epub", words: facts.words });
 const after2 = await fs.readFile(path.join(metaDir(dirA), "LINEAGE.md"), "utf8");
 
-check("8  the hand-written document survives verbatim", after2.includes("## What the July 21 pass actually did"));
+check("8  hand-written sections survive verbatim", after2.includes("Append-only") && after2.length > before2.length);
 check("   nothing above the marker was rewritten", after2.startsWith(before2.slice(0, before2.indexOf("| Date |"))));
 check("   the seeded v6 source row is still there", after2.includes("| 2026-08-08 | v6 | source |"));
 check("   both new rows appended", after2.includes("| v6 | blues |") && after2.includes("| v6 | epub |"));
@@ -133,7 +143,7 @@ check("   new rows sit ABOVE the marker", rowsAfterMarker.length === 0, `${rowsA
 
 // ---------------------------------------------------------------- seeding
 console.log("\nA book with no _meta yet");
-const dirB = await scratchInn({ noMeta: true });
+const dirB = (await scratchBook({ noMeta: true })).bookDir;
 const { book: fresh } = await loadBook(dirB);
 const s4 = await syncVersion(fresh, dirB);
 check("   seeds at v1", s4.seeded && s4.version === 1);
@@ -144,11 +154,9 @@ check("   version.json written under _meta/", seeded !== null && seeded.current_
 check("   LINEAGE.md seeded with a usable table", (await fs.readFile(path.join(metaDir(dirB), "LINEAGE.md"), "utf8")).includes("| Date | Ver | Artifact |"));
 check("   nothing written to the book root", !(await fs.readdir(dirB)).some((f) => /^(LINEAGE\.md|version\.json)$/i.test(f)));
 
-// The real book must be untouched by any of this. Its hash and round counter
-// move as real exports happen, so only the version is asserted — pinning the
-// hash here is what made this suite break after the first genuine export.
-const innNow = await readVersionFile(INN);
-check("\n   the real Bk-1_The-Inn was only read", innNow!.current_version === 6, `v${innNow!.current_version}`);
+// Everything above ran on temp copies. The source book must be untouched — no
+// metadata written back into whatever manuscript folder is under test.
+check("\n   the source book is unchanged", (await sourceSnapshot()) === sourceBefore);
 
 for (const f of fixtures) await f.cleanup();
 

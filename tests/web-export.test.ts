@@ -2,16 +2,18 @@
    Drives the real API on an ephemeral port: folder-backed projects get written
    server-side, drag-and-dropped ones still come back as bytes to download. */
 import path from "node:path";
-import os from "node:os";
-import crypto from "node:crypto";
+
+
 import { promises as fs } from "node:fs";
 import express from "express";
 import type { AddressInfo } from "node:net";
 import { registerApi } from "../server/api.ts";
 import { closeBrowser } from "../server/pipeline/render-pdf.ts";
 import { readVersionFile } from "../server/versioning.ts";
+import { makeBookFixture, sourceSnapshot } from "./fixtures/book.ts";
+import { slugForFolder } from "../server/destinations.ts";
 
-const INN = "C:/AI Workspace/Books/Linfield/Series-1_Goose/Bk-1_The-Inn";
+// The book under test — the bundled sample unless BSBF_TEST_BOOK says otherwise.
 let pass = 0;
 let fail = 0;
 const check = (label: string, ok: boolean, detail = "") => {
@@ -19,21 +21,14 @@ const check = (label: string, ok: boolean, detail = "") => {
   ok ? pass++ : fail++;
 };
 
+// Proof, at the end, that this suite never wrote back to the source book.
+const sourceBefore = await sourceSnapshot();
+
 // ---- throwaway book + review folder ----
-const root = path.join(os.tmpdir(), `bf-p7-${crypto.randomUUID().slice(0, 8)}`);
-const bookDir = path.join(root, "Bk-1_The-Inn");
-const reviewDir = path.join(root, "Books to Review");
-await fs.cp(INN, bookDir, {
-  recursive: true,
-  filter: (s) => !s.includes("_pre-merge-backup") && !s.includes("_superseded"),
-});
-const yamlPath = path.join(bookDir, "book.yaml");
-await fs.writeFile(
-  yamlPath,
-  (await fs.readFile(yamlPath, "utf8")).replace(/^blues_output:.*$/m, "") +
-    `\nblues_output: ${reviewDir.replace(/\\/g, "/")}\n`,
-  "utf8",
-);
+const fixture = await makeBookFixture();
+const { bookDir, reviewDir } = fixture;
+const SLUG = slugForFolder(bookDir);
+const esc = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const app = express();
 app.use(express.json({ limit: "5mb" }));
@@ -62,7 +57,11 @@ const blues1 = await post(`/api/projects/${id}/export`, { format: "blues", pages
 check("blues written server-side", blues1.body.written === true, JSON.stringify(blues1.body.message ?? ""));
 check("   no bytes sent to the browser", blues1.body.dataBase64 === undefined);
 check("   landed in the review folder", String(blues1.body.path).startsWith(path.resolve(reviewDir)), blues1.body.path);
-check("   named per D3", /^the-inn_v6_\d{4}-\d{2}-\d{2}_blues\.pdf$/.test(blues1.body.filename), blues1.body.filename);
+check(
+  "   named per D3",
+  new RegExp(`^${esc(SLUG)}_v6_\\d{4}-\\d{2}-\\d{2}_blues\\.pdf$`).test(blues1.body.filename),
+  blues1.body.filename,
+);
 check("   reports version, pages, chapters, round", blues1.body.version === 6 && blues1.body.pages > 0 && blues1.body.round === 1, JSON.stringify({ v: blues1.body.version, p: blues1.body.pages, r: blues1.body.round }));
 check("   respected the page cap", blues1.body.pages <= 20, `${blues1.body.pages} pages`);
 
@@ -81,7 +80,11 @@ console.log("\nNon-blues artifacts stay with the book");
 const kdp = await post(`/api/projects/${id}/export`, { format: "epub", preset: "kdp", meta: {}, theme: "classic" });
 check("epub written server-side", kdp.body.written === true);
 check("   into _exports/", String(kdp.body.path).includes(`${path.sep}_exports${path.sep}`), kdp.body.path);
-check("   with the _kdp variant", kdp.body.filename === `the-inn_v6_${kdp.body.filename.split("_")[2]}_kdp.epub`, kdp.body.filename);
+check(
+  "   with the _kdp variant",
+  new RegExp(`^${esc(SLUG)}_v6_\\d{4}-\\d{2}-\\d{2}_kdp\\.epub$`).test(kdp.body.filename),
+  kdp.body.filename,
+);
 check("   validation still returned", kdp.body.validation?.tool === "epubcheck" && kdp.body.validation.valid === true, JSON.stringify(kdp.body.validation?.tool));
 
 const vf = (await readVersionFile(bookDir))!;
@@ -101,13 +104,10 @@ const sampleBlues = await post(`/api/projects/${sid}/export`, { format: "blues",
 check("blues refused with a useful reason", sampleBlues.status >= 400 && /opened from a folder/.test(sampleBlues.body.error ?? ""), sampleBlues.body.error);
 
 // ---------------------------------------------------------------- safety
-const realVf = await readVersionFile(INN);
-check("\n   the real book was never touched", realVf!.current_version === 6);
-const realReview = await fs.readdir("C:/Users/mrocz/OneDrive/Books to Review").catch(() => [] as string[]);
-check("   the real review folder holds only the v6 blues", realReview.filter((f) => f.endsWith(".pdf")).length === 1, realReview.join(", "));
+check("\n   the source book is unchanged", (await sourceSnapshot()) === sourceBefore);
 
 server.close();
 await closeBrowser();
-await fs.rm(root, { recursive: true, force: true });
+await fixture.cleanup();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

@@ -156,7 +156,7 @@ backmatter:
 # --- Where exports go (optional) ---
 exports_dir: _exports                                 # relative to this folder
 blues_output: C:/Users/you/OneDrive/Books to Review   # absolute; set it in the app
-slug: the-inn                                         # filename stem; defaults to the folder name
+slug: the-book                                         # filename stem; defaults to the folder name
 
 # --- Files in the chapters folder that aren't chapters (optional) ---
 exclude:
@@ -407,13 +407,13 @@ or in `book.yaml` as `blues_output:`.
 ### From the command line
 
 ```bash
-npm run blues -- --book "C:/path/to/Bk-1_The-Inn"
+npm run blues -- --book "C:/path/to/Bk-1_The-Book"
 ```
 
 ```
-✓ The Inn That Wasn't There Yesterday — BLUES v6 (round 1 of 1)
+✓ The Book That Wasn't There Yesterday — BLUES v6 (round 1 of 1)
   44 pages · chapters 1–4 of 26
-  → OneDrive\Books to Review\the-inn_v6_2026-08-09_blues.pdf
+  → OneDrive\Books to Review\the-book_v6_2026-08-09_blues.pdf
   archived v5
 ```
 
@@ -454,10 +454,10 @@ Two files in the book's `_meta/` folder hold this:
 ```
 {slug}_v{N}_{YYYY-MM-DD}[_{variant}].{ext}
 
-the-inn_v6_2026-08-09_blues.pdf
-the-inn_v6_2026-08-09_print.pdf
-the-inn_v6_2026-08-09_kdp.epub
-the-inn_v6_2026-08-09.epub          ← universal
+the-book_v6_2026-08-09_blues.pdf
+the-book_v6_2026-08-09_print.pdf
+the-book_v6_2026-08-09_kdp.epub
+the-book_v6_2026-08-09.epub          ← universal
 ```
 
 Version first, so sorting by name sorts by version. Everything except the blues goes

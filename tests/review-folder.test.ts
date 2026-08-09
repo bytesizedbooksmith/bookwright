@@ -17,7 +17,7 @@ const check = (label: string, ok: boolean, detail = "") => {
   ok ? pass++ : fail++;
 };
 
-// A book with NO blues_output — the state Perfect-Endings was in.
+// A book with NO blues_output set — the state any book starts in.
 const fx = await makeBookFixture();
 const yamlPath = path.join(fx.bookDir, "book.yaml");
 await fs.writeFile(yamlPath, (await fs.readFile(yamlPath, "utf8")).replace(/^blues_output:.*$/m, "").trimEnd() + "\n", "utf8");
@@ -60,7 +60,7 @@ check("the endpoint returns the updated summary", saved.status === 200 && saved.
 const cfg = (await readConfig(fx.bookDir))!;
 check("written to book.yaml", typeof cfg.blues_output === "string", String(cfg.blues_output));
 check("   stored with forward slashes", !String(cfg.blues_output).includes("\\"), String(cfg.blues_output));
-check("   the rest of book.yaml survived", cfg.title === "The Inn That Wasn't There Yesterday" && Array.isArray(cfg.frontmatter));
+check("   the rest of book.yaml survived", typeof cfg.title === "string" && cfg.title.length > 0 && Array.isArray(cfg.frontmatter));
 const dest1 = await resolveDestinations(fx.bookDir);
 check("   the CLI path sees the same value", dest1.bluesDir === path.resolve(fx.reviewDir));
 

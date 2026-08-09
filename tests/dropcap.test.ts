@@ -16,10 +16,12 @@ const check = (label: string, ok: boolean, detail = "") => {
 const base = await fs.readFile(path.join(THEMES_DIR, "base.css"), "utf8");
 const printBase = await fs.readFile(path.join(THEMES_DIR, "print-base.css"), "utf8");
 
+// Filler, not from any book. It only has to be long enough that the cap has
+// three real lines to sit against and the wrap behaves like a finished page.
 const BODY =
-  "he new email message made my monitor flicker and smoke. Great. Even Outlook was going to Hell, " +
-  "and the rest of this paragraph is here so the cap has real lines to sit against and the wrap " +
-  "behaves the way it will on a finished page rather than in a toy fixture.";
+  "he clock in the hallway struck an hour that does not exist, and nobody in the house " +
+  "thought to mention it. The rest of this paragraph is here so the capital has real lines " +
+  "beside it and the text wraps the way it will on a finished page rather than in a toy fixture.";
 
 async function pageHtml(theme: string, print: boolean): Promise<string> {
   const themeCss = await fs.readFile(path.join(THEMES_DIR, theme, "theme.css"), "utf8");

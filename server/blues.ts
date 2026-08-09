@@ -15,7 +15,7 @@ export interface BluesOptions {
   date: string; // YYYY-MM-DD stamped on the cover and running head
   round: number; // blues round
   maxRounds: number;
-  sourceLabel?: string; // shown on the cover, e.g. Books/Linfield/…/Bk-1_The-Inn
+  sourceLabel?: string; // shown on the cover, e.g. Books/Author/Series/Bk-1_The-Book
   chapters?: { from: number; to: number }; // 1-based inclusive chapter range
   maxPages?: number; // stop after ~N pages, never mid-chapter
 }

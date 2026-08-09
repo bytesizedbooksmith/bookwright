@@ -51,8 +51,8 @@ export interface DestinationConfig {
 }
 
 /**
- * The filename stem, derived from the FOLDER, not the title. `Bk-1_The-Inn`
- * gives `the-inn`; the title would give `the-inn-that-wasnt-there-yesterday`,
+ * The filename stem, derived from the FOLDER, not the title. `Bk-1_The-Book`
+ * gives `the-book`; the title would give `the-book-that-wasnt-there-yesterday`,
  * which is unusable on a page and in a folder listing. A `slug:` in book.yaml
  * overrides it.
  */
