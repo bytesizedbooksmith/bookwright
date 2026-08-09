@@ -108,6 +108,7 @@ The right margin is the single most important property in this spec. Nothing may
 ### Type
 
 - Serif body, 14pt, line-height 1.6
+- **Ragged right, no hyphenation.** Justified text opens rivers of white space down the page, and on a marked-up page a river reads as a pencil stroke. Hyphenation does the same at the line end. (From the Blues Loop SOP — the body CSS justifies by default, so the blues has to override it)
 - Paragraph indent, no space between paragraphs (standard fiction setting)
 - Scene breaks render as a centered `* * *` — plain, no decorative ornament
 - Chapter openers start a new page, chapter title at 20pt, no drop caps, no flourishes
@@ -149,7 +150,7 @@ First page, no running head or foot. Centered block:
                   round 1 of 3
 ```
 
-Everything on this page is generated, never typed. The version number, date, and round counter come from `blues.json` (Deliverable 2).
+Everything on this page is generated, never typed. The version number, date, and round counter come from `version.json` (Deliverable 2).
 
 ### Table of contents
 
@@ -275,17 +276,7 @@ Metadata still lives in `_meta/` rather than the book root. Two independent prot
 
 **Regression test:** drop a file named `ZZZ-notes.md` into a book folder with `chapters: .`, render an EPUB, confirm it is excluded and warned about — and that a file named `chapter-27.md` is still included.
 
-### `LINEAGE.md`
-
-Also at the book folder root. Human-readable. Appended (never rewritten) on each generation:
-
-```markdown
-| Date | Version | Round | Words | Chapters | Note |
-|---|---|---|---|---|---|
-| 2026-08-08 | v4 | 1 | 52,994 | 26 | blues generated |
-```
-
-The `Note` column is free text via an optional `--note` flag, so non-blues events ("DeepSeek rewrite", "Notion revision notes applied") can be logged into the same table by hand later.
+**As built:** rules 1 and 2 cannot recognise an arbitrary name like `ZZZ-notes.md`, and a rule that could would also eat a legitimate `prologue.md` — the exact over-reach the `chapter-27.md` half of this test exists to prevent. So the stray is still ingested, but it is no longer *silent*: any file that survives the filters and doesn't match the folder's dominant naming pattern is named in a warning, and `exclude:` removes it for good. Silence was the failure mode; that is what got fixed.
 
 ---
 
@@ -367,20 +358,23 @@ Flags:
 | `--out <path>` | Override output dir |
 | `--new-round` | Increment the round counter |
 | `--note "<text>"` | Text for the LINEAGE.md Note column |
-| `--chapters 1-6` | Generate only a chapter range |
-| `--pages 50` | **Stop after approximately N pages.** See below |
+| `--chapters 5-26` | Generate only a chapter range. An escape hatch, not part of the method — see below |
+| `--pages 50` | **Stop after approximately N pages.** Defaults to 50 |
+| `--yes` | Don't ask before regenerating an artifact that already exists |
 
 ### The `--pages` flag
 
 This is a deliberate constraint, not a convenience. The method is: read a fixed budget of pages, diagnose the *systemic* problems, hand the whole manuscript back to the machine. Reading the entire book is the failure mode this whole system exists to prevent.
 
-`--pages 50` renders complete chapters until the page count would exceed 50, then stops — never mid-chapter — and prints the final page on the cover page:
+`--pages 50` renders complete chapters until the page count would exceed 50, then stops — never mid-chapter — and prints the range on the cover page:
 
 ```
               round 1 of 3 · pages 1–52 of ~310
 ```
 
-Default: no cap (full book).
+**Default: 50.** Per the Blues Loop SOP, a blues is *always* the first ~50 pages of the book, starting at page 1 — never the whole book, and normally not a slice from the middle. Fifty pages, six problems, one handoff, whole book fixed. The uncapped full-book render is the thing the cap exists to prevent, so it is not the default; pass a large `--pages` if you ever genuinely want it.
+
+`--chapters` remains available for the unusual case (a book whose opening has already been hand-worked, so the first 50 pages would under-diagnose), but it is a departure from the method and the SOP does not use it.
 
 ### Console output
 
@@ -389,9 +383,11 @@ On success, print exactly:
 ```
 ✓ The Inn That Wasn't There Yesterday — BLUES v4 (round 1 of 3)
   52 pages · chapters 1–6 of 26
-  → OneDrive\Books to Review\the-inn_blues-v4_2026-08-08.pdf
+  → OneDrive\Books to Review\the-inn_v4_2026-08-08_blues.pdf
   archived v3
 ```
+
+The filename follows the one convention in Deliverable 3 — version first, then date, then variant.
 
 Nothing else. No progress bars, no verbose logging on the happy path.
 

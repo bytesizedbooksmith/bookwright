@@ -29,12 +29,22 @@ body {
 }
 
 /* Standard fiction setting: first line indented, no space between paragraphs.
-   The first paragraph after a heading or scene break is flush, as in print. */
+   The first paragraph after a heading or scene break is flush, as in print.
+
+   Ragged right, and no hyphenation. base.css justifies body text with
+   hyphens: auto, which is right for a finished book and wrong here: justified
+   text opens rivers of white space down the page, and on a page being marked up
+   in pencil a river reads as a stroke. A hyphen at the line end does the same
+   thing to a word. Both are overridden for the blues only. */
 section.chapter p {
   margin: 0;
   text-indent: 1.5em;
   orphans: 3;
   widows: 3;
+  text-align: left;
+  text-align-last: left;
+  -webkit-hyphens: none;
+  hyphens: none;
 }
 section.chapter > h1 + p,
 section.chapter .chapter-subtitle + p,

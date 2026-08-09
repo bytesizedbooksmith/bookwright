@@ -16,6 +16,14 @@ import { currentRound, ensureRoundStarted, finishExport, prepareExport } from ".
 import { roundWarning } from "./versioning.ts";
 import { isAppError } from "./errors.ts";
 
+/**
+ * A blues is always the first ~50 pages, per the Blues Loop SOP: fifty pages,
+ * six problems, one handoff, whole book fixed. The uncapped full-book render is
+ * the failure mode the cap exists to prevent, so it is not the default — pass a
+ * large --pages if you genuinely want one.
+ */
+const DEFAULT_PAGE_CAP = 50;
+
 interface Args {
   book?: string;
   out?: string;
@@ -34,8 +42,8 @@ const USAGE = `
   --out <path>       Override the output folder
   --new-round        Increment the round counter
   --note "<text>"    Text for the LINEAGE.md Note column
-  --chapters 1-6     Generate only a chapter range
-  --pages 50         Stop after approximately N pages, never mid-chapter
+  --chapters 5-26    Generate only a chapter range (an escape hatch, not the method)
+  --pages 50         Stop after approximately N pages, never mid-chapter (default 50)
   --yes              Don't ask before regenerating an existing file
 `;
 
@@ -133,7 +141,7 @@ async function main(): Promise<number> {
     maxRounds: round.maxRounds,
     sourceLabel: path.relative(path.resolve("C:/AI Workspace"), bookDir).replace(/\\/g, "/") || bookDir,
     chapters: args.chapters,
-    maxPages: args.pages,
+    maxPages: args.pages ?? DEFAULT_PAGE_CAP,
   });
 
   const result = await finishExport(prep, "blues", buffer, {
