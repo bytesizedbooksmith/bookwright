@@ -59,8 +59,10 @@ img {
 .dropcap {
   font-size: 5em;
   line-height: 1;
-  padding: 0.02em 0.1em 0 0;
-  margin: 0 0 -0.12em 0;
+  padding: 0 0.1em 0 0;
+  /* Seated by measurement at render time (pipeline/dropcap.ts); this is only
+     the starting point it corrects from. */
+  margin: -0.13em 0 -0.12em 0;
 }
 
 /* Keep the chapter subtitle with its title and the first body line (no orphaned

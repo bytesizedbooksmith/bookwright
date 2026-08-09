@@ -6,6 +6,7 @@ import { renderHtml } from "./render-html.ts";
 import { insertPrintToc } from "./build-doc.ts";
 import { getBrowser } from "./render-pdf.ts";
 import { ROOT, THEMES_DIR } from "./paths.ts";
+import { alignDropCaps } from "./dropcap.ts";
 import { autoGutter, buildPageCss, estimatePages, getTrim, type PrintOptions } from "../print.ts";
 
 export interface PrintMeta {
@@ -66,6 +67,9 @@ async function withPaginated<T>(
   const page = await browser.newPage();
   try {
     await page.setContent(html, { waitUntil: "networkidle0" });
+    // Seat the drop caps before pagination — the correction changes how text
+    // wraps around the float, so it has to settle before pages are measured.
+    await alignDropCaps(page);
     // Disable Paged.js auto-run (set before the polyfill script loads).
     await page.evaluate(() => {
       window.PagedConfig = { auto: false };

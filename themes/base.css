@@ -171,8 +171,14 @@ section.level1 {
   float: left;
   font-size: 3.1em;
   line-height: 1;
-  padding: 0.04em 0.08em 0 0;
-  margin: 0 0 -0.08em 0;
+  padding: 0 0.08em 0 0;
+  /* A floated cap aligns its BOX to the line top, but the glyph sits on its
+     baseline with the ascender above it, so the capital lands low. This lifts it
+     by roughly (ascender − cap-height) for a serif face. It is a default, not an
+     exact answer: the true value depends on the font that resolves, and the PDF
+     paths measure each cap and override this (see pipeline/dropcap.ts). EPUB has
+     no browser to measure in, so it keeps the constant. */
+  margin: -0.06em 0 -0.08em 0;
 }
 
 /* --- Title page --- */

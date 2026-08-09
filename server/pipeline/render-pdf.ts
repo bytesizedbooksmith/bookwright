@@ -2,6 +2,7 @@ import type { Browser } from "puppeteer";
 import puppeteer from "puppeteer";
 import type { Book } from "./types.ts";
 import { renderHtml } from "./render-html.ts";
+import { alignDropCaps } from "./dropcap.ts";
 import { AppError } from "../errors.ts";
 
 let browserPromise: Promise<Browser> | null = null;
@@ -40,6 +41,7 @@ export async function renderPdf(book: Book): Promise<Buffer> {
   const page = await browser.newPage();
   try {
     await page.setContent(html, { waitUntil: "networkidle0" });
+    await alignDropCaps(page);
     const pdf = await page.pdf({
       printBackground: true,
       width: "6in",
