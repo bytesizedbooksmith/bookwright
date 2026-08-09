@@ -141,9 +141,15 @@ export async function planWrite(
   for (const e of entries) {
     const parsed = parseArtifactName(e, dest.slug);
     if (!parsed || !isSameArtifact(parsed, type)) continue;
-    // Same version regenerated is still that version — it is overwritten in
-    // place, not archived, or the folder would fill with identical files.
-    if (parsed.version < version) toArchive.push(e);
+    if (e === filename) continue; // this one gets overwritten in place, not archived
+    // Anything else of this type is superseded, INCLUDING the same version under
+    // a different date. Regenerating v6 the morning after v6 was first written
+    // produces a new filename, not an overwrite, and archiving only older
+    // versions would leave two v6 files side by side — which is exactly the
+    // "which one is latest?" question this whole system exists to answer.
+    // A HIGHER version is left alone: burying newer work would be worse than
+    // any duplicate.
+    if (parsed.version <= version) toArchive.push(e);
   }
 
   return { dir, filename, fullPath, exists: entries.includes(filename), toArchive: toArchive.sort() };
