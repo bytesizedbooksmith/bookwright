@@ -10,5 +10,7 @@ vendor/
 .DS_Store
 .tmp/
 
-# scratch / throwaway test files
+# Scratch. NB: this also hides anything named _foo.ts at the repo root, which is
+# how the whole regression suite once ended up untracked — if it matters, it goes
+# in tests/, not here.
 _*

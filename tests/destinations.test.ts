@@ -1,0 +1,208 @@
+/* Phase 5 verification — destinations, naming, archiving (acceptance 9, 11, 12).
+   Runs against a throwaway copy of the book and a throwaway review folder; the
+   real manuscript and the real OneDrive folder are never written to. */
+import path from "node:path";
+import { promises as fs } from "node:fs";
+import { makeBookFixture } from "./fixtures/book.ts";
+import { loadBook } from "../server/pipeline/ingest.ts";
+import {
+  ARCHIVE_DIRNAME,
+  artifactFilename,
+  parseArtifactName,
+  resolveDestinations,
+  slugForFolder,
+  type ArtifactType,
+} from "../server/destinations.ts";
+import { finishExport, prepareExport } from "../server/exporter.ts";
+import { readVersionFile, metaDir } from "../server/versioning.ts";
+
+const INN = "C:/AI Workspace/Books/Linfield/Series-1_Goose/Bk-1_The-Inn";
+let pass = 0;
+let fail = 0;
+const check = (label: string, ok: boolean, detail = "") => {
+  console.log(`  ${ok ? "✓" : "✗"} ${label}${detail ? ` — ${detail}` : ""}`);
+  ok ? pass++ : fail++;
+};
+
+// Metadata pinned to a known state — the real book's _meta moves as genuine
+// exports happen, and assertions pinned to a snapshot of it break the moment
+// one runs. See fixtures/book.ts.
+const fixture = await makeBookFixture();
+const { bookDir, reviewDir } = fixture;
+
+// ---------------------------------------------------------------- naming
+console.log("\nNaming");
+check("slug comes from the folder, not the title", slugForFolder(bookDir) === "the-inn", slugForFolder(bookDir));
+check("   Bk-2 prefix also stripped", slugForFolder("C:/x/Bk-2_Irregular-Harvest") === "irregular-harvest");
+check("   a folder with no prefix is used as-is", slugForFolder("C:/x/Perfect-Endings") === "perfect-endings");
+
+const naming: [ArtifactType, string][] = [
+  ["blues", "the-inn_v6_2026-08-08_blues.pdf"],
+  ["print", "the-inn_v6_2026-08-08_print.pdf"],
+  ["reading", "the-inn_v6_2026-08-08_reading.pdf"],
+  ["epub-kdp", "the-inn_v6_2026-08-08_kdp.epub"],
+  ["epub-universal", "the-inn_v6_2026-08-08.epub"],
+  ["docx", "the-inn_v6_2026-08-08.docx"],
+  ["md", "the-inn_v6_2026-08-08.md"],
+];
+for (const [type, expected] of naming) {
+  check(`   ${type.padEnd(15)} -> ${expected}`, artifactFilename("the-inn", 6, "2026-08-08", type) === expected);
+}
+check(
+  "   names sort by version",
+  ["the-inn_v10_2026-01-01.epub", "the-inn_v2_2026-09-09.epub"].sort()[0].includes("v10"),
+  "v10 before v2 (string sort) — dates still disambiguate",
+);
+const parsed = parseArtifactName("the-inn_v6_2026-08-08_blues.pdf", "the-inn");
+check("   filenames parse back", parsed?.version === 6 && parsed.variant === "blues" && parsed.ext === "pdf");
+check("   a foreign file is not parsed as ours", parseArtifactName("notes.pdf", "the-inn") === null);
+
+// ---------------------------------------------------------------- routing
+console.log("\nRouting");
+const dest = await resolveDestinations(bookDir);
+check("blues goes to the review folder", dest.bluesDir === path.resolve(reviewDir));
+check("everything else stays with the book", dest.exportsDir === path.resolve(bookDir, "_exports"));
+
+// ---------------------------------------------------------------- test 9
+console.log("\n9  three artifacts, no source edits between them");
+const { book } = await loadBook(bookDir);
+const prepA = await prepareExport(book, bookDir, { date: "2026-08-08" });
+const rBlues = await finishExport(prepA, "blues", Buffer.from("BLUES-v6"), { note: "round 1" });
+
+const prepB = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-08" });
+const rEpub = await finishExport(prepB, "epub-universal", Buffer.from("EPUB-v6"));
+
+const prepC = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-08" });
+const rPrint = await finishExport(prepC, "print", Buffer.from("PRINT-v6"));
+
+check("all three read v6", rBlues.version === 6 && rEpub.version === 6 && rPrint.version === 6);
+check("   all three filenames say v6", [rBlues, rEpub, rPrint].every((r) => r.filename!.includes("_v6_")));
+const vf = (await readVersionFile(bookDir))!;
+const entry6 = vf.history.find((e) => e.version === 6)!;
+check("   all three under ONE history entry", entry6.exports.length === 3, `${entry6.exports.length}`);
+check("   history did not grow", vf.history.length === 6, `${vf.history.length} entries`);
+check("   the blues went to the review folder", rBlues.path!.startsWith(path.resolve(reviewDir)));
+check("   the epub stayed with the book", rEpub.path!.includes(`${path.sep}_exports${path.sep}`));
+
+// ---------------------------------------------------------------- test 11
+console.log("\n11 re-export at an unchanged version");
+const prepD = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-08" });
+let prompted = "";
+const declined = await finishExport(prepD, "epub-universal", Buffer.from("EPUB-again"), {
+  confirm: async (m) => {
+    prompted = m;
+    return false;
+  },
+});
+check("the prompt fires", prompted.includes("source unchanged since v6") && prompted.includes("already exists"), prompted);
+check("   declining writes nothing", !declined.written);
+check(
+  "   the file on disk is untouched",
+  (await fs.readFile(path.join(dest.exportsDir, "the-inn_v6_2026-08-08.epub"), "utf8")) === "EPUB-v6",
+);
+
+const prepE = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-08" });
+const accepted = await finishExport(prepE, "epub-universal", Buffer.from("EPUB-regenerated"), { confirm: async () => true });
+check("   accepting overwrites in place — same version, same name", accepted.overwrote && accepted.filename === "the-inn_v6_2026-08-08.epub");
+check(
+  "   contents replaced",
+  (await fs.readFile(path.join(dest.exportsDir, "the-inn_v6_2026-08-08.epub"), "utf8")) === "EPUB-regenerated",
+);
+const exportsAfter = (await fs.readdir(dest.exportsDir)).filter((f) => f.endsWith(".epub"));
+check("   no duplicate left behind", exportsAfter.length === 1, exportsAfter.join(", "));
+
+// ---------------------------------------------------------------- test 12
+console.log("\n12 a new version archives the old one");
+const chFile = path.join(bookDir, "chapter-07.md");
+await fs.writeFile(chFile, (await fs.readFile(chFile, "utf8")).replace("The", "One"), "utf8");
+const prepF = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-15" });
+check("version rolled to 7", prepF.sync.version === 7 && prepF.sync.changed, `v${prepF.sync.version}`);
+
+const rBlues7 = await finishExport(prepF, "blues", Buffer.from("BLUES-v7"));
+const prepG = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-15" });
+const rEpub7 = await finishExport(prepG, "epub-universal", Buffer.from("EPUB-v7"));
+
+check("   v6 blues was archived", rBlues7.archived.includes("the-inn_v6_2026-08-08_blues.pdf"), rBlues7.archived.join(", "));
+check("   v6 epub was archived", rEpub7.archived.includes("the-inn_v6_2026-08-08.epub"), rEpub7.archived.join(", "));
+
+const reviewTop = (await fs.readdir(reviewDir)).filter((f) => f !== ARCHIVE_DIRNAME);
+check("12 only current artifacts at the top of the review folder", reviewTop.length === 1 && reviewTop[0].includes("_v7_"), reviewTop.join(", "));
+// "Only current artifacts at the top level" means one file per ARTIFACT TYPE,
+// each the newest of its type — not that every file shares the newest version.
+// The v6 print pdf stays visible because no v7 print pdf was ever made, and it
+// is still the only print pdf there is; archiving it would hide the sole copy.
+// The version in the filename is what makes its staleness legible.
+const exportsTop = (await fs.readdir(dest.exportsDir)).filter((f) => f !== ARCHIVE_DIRNAME);
+const byType = new Map<string, number[]>();
+for (const f of exportsTop) {
+  const p = parseArtifactName(f, dest.slug)!;
+  const key = `${p.variant ?? ""}.${p.ext}`;
+  byType.set(key, [...(byType.get(key) ?? []), p.version]);
+}
+check(
+  "12 one file per artifact type at the top of _exports",
+  [...byType.values()].every((v) => v.length === 1),
+  exportsTop.join(", "),
+);
+check("   the newest epub is v7", byType.get(".epub")?.[0] === 7);
+check("   the print pdf is still v6 and still visible (no v7 was made)", byType.get("print.pdf")?.[0] === 6);
+
+const archivedReview = await fs.readdir(path.join(reviewDir, ARCHIVE_DIRNAME));
+check("12 nothing deleted — the old blues is in _archive/", archivedReview.includes("the-inn_v6_2026-08-08_blues.pdf"));
+check(
+  "   archived content intact",
+  (await fs.readFile(path.join(reviewDir, ARCHIVE_DIRNAME, "the-inn_v6_2026-08-08_blues.pdf"), "utf8")) === "BLUES-v6",
+);
+
+// print pdf from v6 must NOT have been archived by the epub write
+const exportsArchive = await fs.readdir(path.join(dest.exportsDir, ARCHIVE_DIRNAME));
+check("   archiving is per artifact type", exportsArchive.includes("the-inn_v6_2026-08-08.epub") && !exportsArchive.includes("the-inn_v6_2026-08-08_kdp.epub"));
+check("   the v6 print pdf is still current (never re-exported)", exportsTop.some((f) => f.includes("_v7_")) && (await fs.readdir(dest.exportsDir)).includes("the-inn_v6_2026-08-08_print.pdf"));
+
+// Same version, next day: a new filename, not an overwrite. The older-dated one
+// must be archived or the folder ends up with two "current" files.
+console.log("\n   same version regenerated on a later date");
+const prepDate = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-16" });
+const nextDay = await finishExport(prepDate, "blues", Buffer.from("BLUES-v7-next-day"));
+check("the previous date is archived", nextDay.archived.includes("the-inn_v7_2026-08-15_blues.pdf"), nextDay.archived.join(", "));
+const reviewTop2 = (await fs.readdir(reviewDir)).filter((f) => f !== ARCHIVE_DIRNAME);
+check("   exactly one blues at the top level", reviewTop2.length === 1 && reviewTop2[0].includes("2026-08-16"), reviewTop2.join(", "));
+check(
+  "   both older files preserved in _archive/",
+  (await fs.readdir(path.join(reviewDir, ARCHIVE_DIRNAME))).length === 2,
+  (await fs.readdir(path.join(reviewDir, ARCHIVE_DIRNAME))).join(", "),
+);
+
+// never overwrite inside _archive/
+await fs.writeFile(path.join(dest.exportsDir, "the-inn_v6_2026-08-08.epub"), "EPUB-v6-again", "utf8");
+const prepH = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-16" });
+const again = await finishExport(prepH, "epub-universal", Buffer.from("EPUB-v7-b"), { force: true });
+const arch2 = await fs.readdir(path.join(dest.exportsDir, ARCHIVE_DIRNAME));
+check("   an archive collision is parked, never overwritten", arch2.filter((f) => f.startsWith("the-inn_v6_2026-08-08")).length === 2, arch2.join(", "));
+void again;
+
+// ---------------------------------------------------------------- lineage
+console.log("\nLINEAGE rows");
+const lineage = await fs.readFile(path.join(metaDir(bookDir), "LINEAGE.md"), "utf8");
+check("a row per written artifact", (lineage.match(/\| v[67] \| (blues|epub-universal|print) \|/g) ?? []).length >= 5);
+check("   --note text lands in the Note column", lineage.includes("| round 1 |"));
+check("   the hand-written history survived", lineage.includes("## What the July 21 pass actually did"));
+check("   nothing written to the book root", !(await fs.readdir(bookDir)).some((f) => /^(LINEAGE\.md|version\.json)$/i.test(f)));
+
+// The real book and the real review folder must be untouched. Only the version
+// is asserted — the hash and round counter legitimately move as real exports run.
+const realVf = await readVersionFile(INN);
+check("\n   the real Bk-1_The-Inn is untouched", realVf!.current_version === 6, `v${realVf!.current_version}`);
+// This run writes to a temp folder, so the real one must still hold exactly the
+// one current blues put there by a genuine export — no extra files, and nothing
+// from this suite. Counting beats pinning a version: the real one moves on.
+const realReview = await fs.readdir("C:/Users/mrocz/OneDrive/Books to Review").catch(() => [] as string[]);
+check(
+  "   the real OneDrive folder still holds exactly one blues",
+  realReview.filter((f) => f.endsWith(".pdf")).length === 1,
+  realReview.join(", "),
+);
+
+await fixture.cleanup();
+console.log(`\n${pass} passed, ${fail} failed`);
+process.exit(fail === 0 ? 0 : 1);

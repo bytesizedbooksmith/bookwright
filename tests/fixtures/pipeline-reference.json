@@ -1,0 +1,54 @@
+{
+  "_comment": "Structural fingerprint of the sample book's outputs, taken from the commit this work started at (rendered 2026-07-02 and confirmed byte-identical to that HEAD during the Phase 0 gate). Test 14 compares against these numbers rather than against binaries in a gitignored folder, which existed only on one machine. Entry sizes are UNCOMPRESSED. .opf and docProps/ are excluded because they carry timestamps that shift the deflate output by a byte or two across days.",
+  "source": "output/regress-check (epub, pdfs) + output/phase0 (docx, md)",
+  "epubUniversal": {
+    "mimetype": 20,
+    "META-INF/container.xml": 252,
+    "META-INF/com.apple.ibooks.display-options.xml": 161,
+    "EPUB/content.opf": 4118,
+    "EPUB/toc.ncx": 1508,
+    "EPUB/nav.xhtml": 1432,
+    "EPUB/styles/stylesheet1.css": 8576,
+    "EPUB/styles/stylesheet2.css": 2322,
+    "EPUB/styles/stylesheet3.css": 242,
+    "EPUB/media/file0.png": 1250743,
+    "EPUB/text/cover.xhtml": 862,
+    "EPUB/text/ch001.xhtml": 916,
+    "EPUB/text/ch002.xhtml": 1022,
+    "EPUB/text/ch003.xhtml": 853,
+    "EPUB/text/ch004.xhtml": 951,
+    "EPUB/text/ch005.xhtml": 2309,
+    "EPUB/text/ch006.xhtml": 2832,
+    "EPUB/text/ch007.xhtml": 2880,
+    "EPUB/text/ch008.xhtml": 1011,
+    "EPUB/text/ch009.xhtml": 922,
+    "EPUB/text/ch010.xhtml": 1002,
+    "EPUB/fonts/ShadowsIntoLight.ttf": 54304
+  },
+  "printPdf": {
+    "bytes": 207666,
+    "pages": 15
+  },
+  "readingPdf": {
+    "bytes": 178448
+  },
+  "docx": {
+    "[Content_Types].xml": 1933,
+    "_rels/.rels": 722,
+    "word/document.xml": 19705,
+    "word/_rels/document.xml.rels": 1203,
+    "word/_rels/footnotes.xml.rels": 124,
+    "word/numbering.xml": 4178,
+    "word/styles.xml": 27121,
+    "word/footnotes.xml": 843,
+    "word/comments.xml": 625,
+    "docProps/core.xml": 862,
+    "docProps/custom.xml": 837,
+    "word/settings.xml": 1320,
+    "docProps/app.xml": 741,
+    "word/theme/theme1.xml": 11663,
+    "word/fontTable.xml": 2376,
+    "word/webSettings.xml": 203
+  },
+  "markdownBytes": 6768
+}

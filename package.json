@@ -13,6 +13,7 @@
     "build": "vite build",
     "start": "npm run build && tsx server/index.ts",
     "blues": "tsx server/cli-blues.ts",
+    "test": "tsx tests/run-all.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
