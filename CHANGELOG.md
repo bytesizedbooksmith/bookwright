@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Blues export** — a wide-margin markup PDF built to be read and annotated on a
+  tablet. US Letter with a **2.5 in right margin that stays permanently blank**,
+  14 pt serif set ragged right and unhyphenated, chapters only, and a
+  `Ch 4 · p 61` footer on every page so a location can be read aloud while
+  dictating notes. The cover page is generated from the book's own version
+  record — version, date, word and chapter count, source folder, review round.
+  Covers the first ~50 pages by default, stopping on a chapter boundary.
+  Available in the export panel and as `npm run blues`.
+- **Version tracking across every format** — the chapter Markdown is hashed
+  before each export. The version increments when *the book* changes, not when an
+  export runs, so a blues, an EPUB and a print PDF made from one untouched source
+  all carry the same version. Recorded in `_meta/version.json`, with an
+  append-only `_meta/LINEAGE.md` you can add your own rows to.
+- **Export destinations, naming, and archiving** — files are named
+  `{slug}_v{N}_{date}[_variant].{ext}` (version first, so name order is version
+  order). Everything but the blues goes to the book's `_exports/`; the blues goes
+  to a review folder your tablet can see, set from the export panel. Superseded
+  files move to `_archive/` and **nothing is ever deleted**, so the top of an
+  output folder holds only current files.
+- **`npm test`** — the regression suite (235 checks over nine areas) now lives in
+  `tests/` and runs from one command. See [tests/README.md](tests/README.md).
 - **Chapter subtitles** — a chapter can carry a second line under its title (a
   point-of-view name, location, or tagline). Write it as a `## ` heading directly
   beneath the chapter's `#` title, or set `subtitle:` in the chapter file's
@@ -23,6 +44,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `/api/health`, instead of failing only on the first export.
 
 ### Changed
+- **Exports are written where they belong, not downloaded** — when a book is
+  opened from a folder on disk, the server writes each export to that book's own
+  folder and the app shows the path. A browser download can't choose where it
+  lands, so it always went to Downloads, and the version record would then name a
+  path with nothing at it. Drag-and-dropped books, which have no permanent home,
+  still download.
 - **Renamed from "Bookwright" to "Byte-Sized Book Formatter"** — the previous
   name conflicted with a registered business. All user-facing strings, the
   package name (`byte-sized-book-formatter`), the dev env vars
@@ -30,6 +57,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   were updated.
 
 ### Fixed
+- **Stray Markdown could become a chapter** — most books set `chapters: .`, which
+  makes the book folder itself the chapters folder, and every `.md` file in it was
+  read as a chapter. A loose `copyright.md` was already being published as the
+  final chapter of two books. Sidecar and matter filenames are now skipped, an
+  `exclude:` list is available for anything else, and both skipped files and
+  oddly-named ones are reported instead of passing silently.
+- **The EPUB preset did nothing** — KDP and Universal produced byte-identical
+  files, because the "don't embed fonts" flag was read and discarded. KDP now
+  ships without embedded fonts, as intended, which is what keeps the per-MB
+  delivery fee down.
+- **Drop caps sat below the first line of text** — a floated cap aligns its box to
+  the top of the line, but the glyph sits on its baseline with the ascender above
+  it, so the capital landed about two-thirds of a line low. The PDF paths now
+  measure each cap against the font that actually resolved and seat it exactly;
+  the correction can't be a constant because it depends on the font.
 - **Drop caps now work in every theme** — the drop-cap toggle was styled only in
   the Decorative theme, so it did nothing on Classic and Modern. All three themes
   now render a drop cap, and the Decorative cap is re-seated onto the baseline.
@@ -45,8 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `spawn pandoc ENOENT`.
 
 Planned (see the README roadmap): a custom theme editor, parts/volumes,
-foot/endnotes, full-bleed image support for print, saved projects, and a
-headless CLI/batch mode.
+foot/endnotes, full-bleed image support for print, saved projects, and batch
+generation across books.
 
 ## [1.1.0] - 2026-06-22
 

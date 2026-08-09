@@ -9,9 +9,14 @@ It runs as a **local web app** in your browser (no internet required) with a
 
 - **EPUB** for **Amazon KDP**, **Curios**, **BookFunnel** (ARCs/promos), and your **own website**
 - **Print-ready PDF** for **paperback/hardback** (KDP / IngramSpark trim sizes)
+- **Blues** — a wide-margin markup PDF built to be read and annotated on a tablet
 - **Word (.docx)**, **compiled Markdown**, and a **reading PDF** for reuse elsewhere
 
 One source, one styling system, many outputs — so the preview always matches the export.
+
+Every export is stamped with the version of the manuscript it came from, and lands
+in a known folder rather than in Downloads — so "which file is the latest?" has an
+answer. See [Versions and where exports go](#versions-and-where-exports-go).
 
 ---
 
@@ -131,7 +136,25 @@ frontmatter:                    # "titlepage" & "copyright" are auto-generated;
 chapters: chapters              # a folder (filename order) OR a single .md file
 backmatter:
   - backmatter/about-the-author.md
+
+# --- Where exports go (optional) ---
+exports_dir: _exports                                 # relative to this folder
+blues_output: C:/Users/you/OneDrive/Books to Review   # absolute; set it in the app
+slug: the-inn                                         # filename stem; defaults to the folder name
+
+# --- Files in the chapters folder that aren't chapters (optional) ---
+exclude:
+  - "ZZZ-*.md"
 ```
+
+`chapters: .` is common — it makes the book folder itself the chapters folder. In
+that case anything ending in `.md` sitting beside your manuscript is a chapter
+candidate, so the formatter skips a few by name: files starting with `_` or `.`,
+`LINEAGE.md`, `README.md`, `NOTES.md`, `CHANGELOG.md`, `TODO.md`, and the front/back
+matter names (`copyright.md`, `dedication.md`, and so on). Anything it skips is
+reported as a warning, and anything it keeps that doesn't match the folder's usual
+naming pattern is flagged too — so a stray note never quietly becomes your last
+chapter. Use `exclude:` for anything else.
 
 ### Markdown conventions
 
@@ -291,11 +314,15 @@ in Chromium, so it takes a few seconds to refresh.)
 | **EPUB · Universal** | EPUB 3 | Curios, BookFunnel, your own site. Standards-clean, kept under ~23 MB for BookFunnel email delivery. |
 | **Word (.docx)** | DOCX | Editors, collaborators, other tools. |
 | **Compiled Markdown** | MD | One clean file for reuse in other projects. |
-| **Reading PDF** | PDF | A quick screen/proof PDF — **not** print-ready trim. For uploads, use **Print book (PDF)** below (its file name ends in `-print-…`). |
+| **Reading PDF** | PDF | A quick screen/proof PDF — **not** print-ready trim. For uploads, use **Print book (PDF)** below. |
+| **Blues (markup PDF)** | PDF | Reading and marking up on a tablet. See [Blues](#blues--the-markup-pdf). |
 
 Both EPUB presets include a **cover**, an **NCX + nav table of contents** (required
-by KDP and Kobo), and valid OPF metadata. Files are also written to the
-[`output/`](output) folder.
+by KDP and Kobo), and valid OPF metadata.
+
+When your book was opened from a folder on disk, the app **writes each export to
+that book's own folder** and shows you the path. Only drag-and-dropped books, which
+have no permanent home, come back as a browser download.
 
 ### Validation
 
@@ -329,10 +356,112 @@ provider's cover tool (cover-spine-cover wraps depend on final page count and pa
 
 ---
 
+## Blues — the markup PDF
+
+A **blues** is your manuscript rendered to be *written on*: read it on a tablet with
+a stylus, away from the computer, and mark it up by hand. (The name is borrowed from
+print production, where "blues" were the last proofs before a job went to press.)
+
+It is not the reading PDF and not the print PDF. Everything about it serves two jobs:
+
+- **Room to write** — a **2.5 in right margin that stays permanently blank.** Nothing
+  renders there: no page numbers, no notes, no ornaments.
+- **A location you can say out loud** — every page carries `Ch 4 · p 61` in the footer,
+  so you can dictate "chapter four, page sixty-one…" into a recording instead of
+  stopping to type.
+
+US Letter, 14 pt serif, ragged right and unhyphenated (justified text opens rivers of
+white space, and on a marked-up page a river reads as a pencil stroke). Chapters only —
+no front or back matter, since nobody revises a copyright page on a tablet. No drop
+caps, no decoration, no hyperlinks: they compete with handwriting.
+
+**Page one is the version.** The cover is generated, never typed — title, author,
+version, date, word and chapter count, source folder, and which review round this is.
+That page is what answers "didn't I already fix this?"
+
+By default a blues covers the **first ~50 pages**, stopping on a chapter boundary
+rather than mid-chapter. That is deliberate: the point is to diagnose what's
+*systematically* wrong and hand that back for a whole-book fix, not to build a
+400-item list of individual corrections.
+
+It goes to its own folder — wherever your tablet can see it — so that folder becomes
+your to-do list. Set it the first time from the **Blues** block in the export panel,
+or in `book.yaml` as `blues_output:`.
+
+### From the command line
+
+```bash
+npm run blues -- --book "C:/path/to/Bk-1_The-Inn"
+```
+
+```
+✓ The Inn That Wasn't There Yesterday — BLUES v6 (round 1 of 1)
+  44 pages · chapters 1–4 of 26
+  → OneDrive\Books to Review\the-inn_v6_2026-08-09_blues.pdf
+  archived v5
+```
+
+| Flag | Effect |
+|---|---|
+| `--book <path>` | Source book folder (required) |
+| `--out <path>` | Override the destination for this run |
+| `--pages 50` | Stop after about N pages, never mid-chapter (default 50) |
+| `--new-round` | Increment the round counter |
+| `--note "<text>"` | Text for the `LINEAGE.md` Note column |
+| `--chapters 5-26` | Only a chapter range — an escape hatch, not the usual path |
+| `--yes` | Don't ask before regenerating a file that already exists |
+
+---
+
+## Versions and where exports go
+
+Exports go stale the moment they're written. The Markdown is the book; everything
+else is a dated snapshot of it. So the formatter keeps track of which snapshot is
+which, and never edits one.
+
+**One version number per book, shared by every format.** Before each export the
+chapter Markdown is hashed. If it changed, the version goes up; if it didn't, the
+version stays and the new file is recorded against it. Export a blues, an EPUB and a
+print PDF without touching a word in between and all three read `v6`, because they
+are all v6.
+
+Two files in the book's `_meta/` folder hold this:
+
+- **`version.json`** — the current version, the source hash, the round counter, and
+  the history of every version with the artifacts made from it.
+- **`LINEAGE.md`** — the same story in a table you can read, **append-only**. Add
+  your own rows by hand for things the formatter didn't do ("DeepSeek rewrite",
+  "revision notes applied") and they live alongside the automatic ones.
+
+### Filenames and archiving
+
+```
+{slug}_v{N}_{YYYY-MM-DD}[_{variant}].{ext}
+
+the-inn_v6_2026-08-09_blues.pdf
+the-inn_v6_2026-08-09_print.pdf
+the-inn_v6_2026-08-09_kdp.epub
+the-inn_v6_2026-08-09.epub          ← universal
+```
+
+Version first, so sorting by name sorts by version. Everything except the blues goes
+to the book's `_exports/` folder; the blues goes to your review folder, because it's
+the one artifact that has to travel to another device.
+
+Before writing, anything it supersedes moves to `_archive/` beside it. **Nothing is
+ever deleted** — not even when a name collides inside the archive. The result is the
+rule that makes this work: **the top level of an output folder holds only current
+files, one per format.**
+
+Regenerating a format at a version that already exists asks first, since from an
+unchanged source you'd be making the same file twice.
+
+---
+
 ## Roadmap
 
 - A custom theme editor, parts/volumes, foot/endnotes, full-bleed image
-  support for print, saved projects, and a headless CLI/batch mode.
+  support for print, saved projects, and batch generation across books.
 
 ---
 
@@ -342,6 +471,8 @@ provider's cover tool (cover-spine-cover wraps depend on final page count and pa
 npm run dev        # Vite (5173) + API (4242) with hot reload
 npm run typecheck  # tsc --noEmit over server + web
 npm run build      # build the frontend to web/dist
+npm test           # the regression suite (see tests/README.md)
+npm run blues -- --book <path>
 
 # Render a book to every format from the command line:
 npx tsx server/pipeline/cli.ts samples/clockwork-garden decorative --all
@@ -351,14 +482,22 @@ npx tsx server/pipeline/cli.ts samples/clockwork-garden decorative --all
 
 ```
 server/            Express API + rendering pipeline (Pandoc + Puppeteer)
-  pipeline/        ingest, structure, render-{html,epub,docx,markdown,pdf}
+  pipeline/        ingest, structure, render-{html,epub,docx,markdown,pdf,print,blues}
+  pipeline/dropcap.ts  seats drop caps by measuring the resolved font
   filters/book.lua Pandoc filter: scene breaks + drop caps
   templates/       custom Pandoc HTML template
   validate/        EPUBCheck wrapper + built-in checks
   presets.ts       KDP vs Universal EPUB presets
-themes/            base.css + classic/ modern/ decorative/
+  blues.ts         blues page geometry + @page CSS
+  versioning.ts    source hashing, version.json, LINEAGE.md
+  destinations.ts  filenames, routing, archive-on-write
+  exporter.ts      the one path every export takes
+  cli-blues.ts     npm run blues
+themes/            base.css + print-base.css + blues-base.css + classic/ modern/ decorative/
 web/               React + Vite + Tailwind UI
+tests/             regression suite — npm test
 samples/           the bundled sample book
+output/            scratch for ad-hoc renders (gitignored, safe to delete)
 ```
 
 ## Troubleshooting

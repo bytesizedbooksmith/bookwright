@@ -151,12 +151,14 @@
           <a href="#preview">13 · Previewing</a>
           <a href="#ebook">14 · Export ebook</a>
           <a href="#print">15 · Print book (PDF)</a>
-          <a href="#publish">16 · Where to publish</a>
+          <a href="#blues">16 · Blues (markup PDF)</a>
+          <a href="#versions">17 · Versions &amp; where files go</a>
+          <a href="#publish">18 · Where to publish</a>
           <strong>Reference</strong>
-          <a href="#troubleshooting">17 · Troubleshooting</a>
-          <a href="#roadmap">18 · Roadmap</a>
-          <a href="#porting">19 · Other operating systems</a>
-          <a href="#credits">20 · Credits &amp; licenses</a>
+          <a href="#troubleshooting">19 · Troubleshooting</a>
+          <a href="#roadmap">20 · Roadmap</a>
+          <a href="#porting">21 · Other operating systems</a>
+          <a href="#credits">22 · Credits &amp; licenses</a>
         </nav>
 
         <main>
@@ -166,8 +168,20 @@
               already produces real, publishable files, but it's an early release: expect rough
               edges, and expect features and screens to change as development continues. This guide
               describes the Windows version. If you use macOS or Linux, see
-              <a href="#porting">§19 · Other operating systems</a>.
+              <a href="#porting">§21 · Other operating systems</a>.
             </p>
+          </div>
+
+          <div class="callout tip">
+            <p><span class="label">What's new since 1.1:</span></p>
+            <ul>
+              <li><strong>Blues</strong> — a wide-margin markup PDF for reading and annotating on a tablet (§16).</li>
+              <li><strong>Version tracking</strong> — one version number per book, shared by every file it produces, with a lineage you can read (§17).</li>
+              <li><strong>Exports land in your book's folder</strong>, not in Downloads, and older ones are archived rather than overwritten (§17).</li>
+              <li><strong>Drop caps</strong> now sit level with the first line of text, in every theme.</li>
+              <li>A stray Markdown file next to your chapters can no longer be picked up as one.</li>
+              <li>The <em>EPUB · Amazon KDP</em> preset now really does ship without embedded fonts, which is what keeps the delivery fee down.</li>
+            </ul>
           </div>
 
           <div class="callout tip">
@@ -483,7 +497,7 @@ styles:
 
           <section id="ebook">
             <h2>14 · Export ebook <a class="toplink" href="#top">↑ top</a></h2>
-            <p>The <strong>Export (ebook)</strong> panel downloads:</p>
+            <p>The <strong>Export (ebook)</strong> panel produces:</p>
             <table>
               <tr><th>Button</th><th>Format</th><th>Where it's for</th></tr>
               <tr><td>EPUB · Amazon KDP</td><td>EPUB 3</td><td>KDP upload. Reader-controlled fonts, small file size.</td></tr>
@@ -496,7 +510,11 @@ styles:
               fonts. The generated <strong>title page</strong> carries your <em>series</em> line (e.g. “A Gadding Goose Novella”)
               and matches the on-screen preview, and the front matter is ordered the conventional way:
               <em>Title → Copyright → Contents → Dedication → Epigraph → chapters</em>. After an EPUB export, the app shows
-              <strong>validation</strong> results. Files are also written to the <code>output/</code> folder.</p>
+              <strong>validation</strong> results.</p>
+            <p>When you opened your book from a folder, each file is <strong>written into that book's own
+              <code>_exports/</code> folder</strong> and the panel tells you the path — nothing goes to Downloads, and the
+              file name carries the version it came from (§17). Books you dragged and dropped have no permanent home, so
+              those still download to your browser.</p>
             <div class="callout note">
               <p><span class="label">Reading PDF vs. Print book (PDF):</span> the <strong>Reading PDF</strong> here is a quick
                 on-screen <em>proof</em> — it has no trim size, running heads, or page numbers. For anything you upload to a
@@ -537,8 +555,79 @@ styles:
             </div>
           </section>
 
+          <section id="blues">
+            <h2>16 · Blues (markup PDF) <a class="toplink" href="#top">↑ top</a></h2>
+            <p>A <strong>blues</strong> is your manuscript rendered to be <em>written on</em> — read it on a tablet with a
+              stylus, away from the computer, and mark it up by hand. (The name comes from print production, where
+              "blues" were the last proofs before a job went to press.)</p>
+            <p>It isn't the reading PDF and it isn't the print PDF. Everything about it serves two jobs:</p>
+            <ul>
+              <li><strong>Room to write</strong> — a <strong>2.5&nbsp;in right margin that stays permanently blank</strong>.
+                Nothing renders there: no page numbers, no notes, no ornaments.</li>
+              <li><strong>A location you can say out loud</strong> — every page carries <code>Ch 4 · p 61</code> in the
+                footer, so you can dictate "chapter four, page sixty-one…" into a recording instead of stopping to type.</li>
+            </ul>
+            <p>US Letter, 14&nbsp;pt serif, ragged right and unhyphenated — justified text opens rivers of white space,
+              and on a marked-up page a river reads like a pencil stroke. Chapters only: no front or back matter, since
+              nobody revises a copyright page on a tablet. No drop caps, no decoration, no links; they compete with
+              handwriting.</p>
+            <p><strong>Page one is the version.</strong> The cover page is generated, never typed — title, author,
+              version, date, word and chapter count, source folder, and which review round this is. That page is what
+              answers "didn't I already fix this?"</p>
+            <div class="callout note">
+              <p>A blues covers the <strong>first ~50 pages</strong> by default, stopping at the end of a chapter rather
+                than mid-chapter. That's deliberate: the goal is to spot what's <em>systematically</em> wrong and fix it
+                across the whole book, not to build a 400-item list of individual corrections.</p>
+            </div>
+            <p>The first time you generate one, the <strong>Blues</strong> block asks where it should go — pick a folder
+              your tablet can see (a synced cloud folder works well). That folder then becomes your to-do list: if three
+              books are sitting in it, three books need reading. The choice is remembered for the next book.</p>
+            <p>There's also a command line, so you can make one without opening the app:</p>
+            <pre><code>npm run blues -- --book "C:/path/to/Bk-1_The-Inn"</code></pre>
+            <pre><code>✓ The Inn That Wasn't There Yesterday — BLUES v6 (round 1 of 1)
+  44 pages · chapters 1–4 of 26
+  → OneDrive\Books to Review\the-inn_v6_2026-08-09_blues.pdf
+  archived v5</code></pre>
+            <p>Useful flags: <code>--pages 50</code> (how far to go), <code>--new-round</code> (start a new review
+              round), <code>--note "…"</code> (a line for your lineage table), <code>--yes</code> (don't ask before
+              replacing an existing file).</p>
+          </section>
+
+          <section id="versions">
+            <h2>17 · Versions &amp; where files go <a class="toplink" href="#top">↑ top</a></h2>
+            <p>Exports go stale the moment they're written. <strong>The Markdown is the book</strong>; everything else is
+              a dated snapshot of it. So the app keeps track of which snapshot is which — and never edits one.</p>
+            <p><strong>One version number per book, shared by every format.</strong> Before each export your chapter
+              files are hashed. If they changed, the version goes up; if they didn't, it stays and the new file is
+              recorded against it. Export a blues, an EPUB and a print PDF without touching a word in between, and all
+              three read <code>v6</code> — because they <em>are</em> all v6.</p>
+            <p>Two files in your book's <code>_meta/</code> folder hold this:</p>
+            <ul>
+              <li><code>version.json</code> — the current version, the source hash, the round counter, and every version
+                with the files made from it.</li>
+              <li><code>LINEAGE.md</code> — the same story in a table you can read. It's <strong>append-only</strong>, and
+                you can add your own rows by hand for things the app didn't do ("revision notes applied", "read-through
+                pass") so they sit alongside the automatic ones.</li>
+            </ul>
+            <h3>File names</h3>
+            <pre><code>the-inn_v6_2026-08-09_blues.pdf
+the-inn_v6_2026-08-09_print.pdf
+the-inn_v6_2026-08-09_kdp.epub
+the-inn_v6_2026-08-09.epub          ← universal</code></pre>
+            <p>Version first, so sorting by name sorts by version. Everything except the blues is written to your book's
+              <code>_exports/</code> folder; the blues goes to your review folder, because it's the one file that has to
+              travel to another device.</p>
+            <div class="callout note">
+              <p>Before writing, anything a new file supersedes is moved into <code>_archive/</code> beside it.
+                <strong>Nothing is ever deleted.</strong> That's what keeps the top of a folder holding only current
+                files — one per format — so you can tell at a glance what's live.</p>
+            </div>
+            <p>If you ask for a format that already exists at the current version, the app checks first: from an
+              unchanged manuscript you'd be making the same file twice.</p>
+          </section>
+
           <section id="publish">
-            <h2>16 · Where to publish <a class="toplink" href="#top">↑ top</a></h2>
+            <h2>18 · Where to publish <a class="toplink" href="#top">↑ top</a></h2>
             <table>
               <tr><th>Channel</th><th>Use</th></tr>
               <tr><td><strong>Amazon KDP</strong></td><td>Upload the <em>EPUB · Amazon KDP</em> file (ebook) and/or the <em>print PDF</em> interior + a cover.</td></tr>
@@ -551,7 +640,7 @@ styles:
           </section>
 
           <section id="troubleshooting">
-            <h2>17 · Troubleshooting <a class="toplink" href="#top">↑ top</a></h2>
+            <h2>19 · Troubleshooting <a class="toplink" href="#top">↑ top</a></h2>
             <table>
               <tr><th>Symptom</th><th>Fix</th></tr>
               <tr><td>"pandoc failed" / not found</td><td>Make sure <code>pandoc --version</code> works in a terminal. Install from pandoc.org and reopen the app.</td></tr>
@@ -564,20 +653,20 @@ styles:
           </section>
 
           <section id="roadmap">
-            <h2>18 · Roadmap <a class="toplink" href="#top">↑ top</a></h2>
+            <h2>20 · Roadmap <a class="toplink" href="#top">↑ top</a></h2>
             <p>Version 1 covers the full ebook + print pipeline. Planned and likely next:</p>
             <ul>
               <li>Interior <strong>images</strong> (chapter art, maps, author photo) with captions</li>
               <li><strong>Parts / volumes</strong> (Part One / Part Two with part-title pages)</li>
               <li>Footnotes / endnotes; a half-title page; bleed &amp; crop marks for print</li>
               <li>A visual header/footer <strong>layout picker</strong>, more themes, and an in-app theme editor</li>
-              <li>Saved projects and a headless batch mode</li>
+              <li>Saved projects, and generating across several books at once</li>
             </ul>
             <p>Because you own the code, you (or an AI coding assistant) can add any of these yourself.</p>
           </section>
 
           <section id="porting">
-            <h2>19 · Other operating systems <a class="toplink" href="#top">↑ top</a></h2>
+            <h2>21 · Other operating systems <a class="toplink" href="#top">↑ top</a></h2>
             <p>
               <strong>This is the Windows version.</strong> Almost everything is cross-platform already (Node, Pandoc, and
               Chromium all run on macOS and Linux). The main Windows-specific piece is the native
@@ -596,7 +685,7 @@ styles:
           </section>
 
           <section id="credits">
-            <h2>20 · Credits &amp; licenses <a class="toplink" href="#top">↑ top</a></h2>
+            <h2>22 · Credits &amp; licenses <a class="toplink" href="#top">↑ top</a></h2>
             <ul>
               <li><strong>Pandoc</strong> — document conversion engine (GPL).</li>
               <li><strong>Paged.js</strong> — print pagination (MIT).</li>
