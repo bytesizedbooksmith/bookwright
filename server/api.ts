@@ -39,6 +39,7 @@ import {
 } from "./matter.ts";
 import { isAppError } from "./errors.ts";
 import { checkPandoc } from "./preflight.ts";
+import { APP_NAME, APP_VERSION } from "./version.ts";
 import { renderBlues } from "./pipeline/render-blues.ts";
 import { currentRound, ensureRoundStarted, finishExport, prepareExport } from "./exporter.ts";
 import { roundWarning } from "./versioning.ts";
@@ -121,7 +122,7 @@ function applyTypography(book: { typography: any }, req: Request): void {
 export function registerApi(app: Express): void {
   app.get("/api/health", (_req, res) =>
     wrap(res, async () => {
-      res.json({ ok: true, name: "byte-sized-book-formatter", version: "1.1.0", pandoc: await checkPandoc() });
+      res.json({ ok: true, name: APP_NAME, version: APP_VERSION, pandoc: await checkPandoc() });
     }),
   );
   app.get("/api/themes", (_req, res) => res.json(themeList()));

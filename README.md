@@ -1,5 +1,9 @@
 # Byte-Sized Book Formatter 📖
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Node 20+](https://img.shields.io/badge/node-20%2B-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-1.2.0-informational.svg)
+
 **A Markdown book formatter for indie authors.** Turn your manuscripts into
 publish-ready books — a Windows-friendly, self-owned alternative to Vellum
 (Mac-only) and Atticus.
@@ -22,29 +26,39 @@ answer. See [Versions and where exports go](#versions-and-where-exports-go).
 
 ## Requirements
 
-Already installed on your machine, but for reference:
-
-| Tool | Needed for | Status |
-|------|------------|--------|
-| **[Pandoc](https://pandoc.org) 3.x** | EPUB / DOCX / HTML generation | **required** |
+| Tool | Needed for | |
+|------|------------|--|
 | **Node.js 20+** | running the app | **required** |
-| **Chromium** | PDF export | auto-downloaded by Puppeteer on `npm install` |
-| **Java** | full EPUBCheck validation (optional) | optional — structural checks run without it |
+| **[Pandoc](https://pandoc.org) 3.x** | EPUB / DOCX / HTML generation | **required** |
+| **Chromium** | all PDF export | installed by Puppeteer — see below |
+| **Java** + [EPUBCheck](https://www.w3.org/publishing/epubcheck/) | retailer-grade EPUB validation | optional — structural checks run without it |
+
+On Windows, [winget](https://learn.microsoft.com/windows/package-manager/) handles
+the first two:
+
+```bash
+winget install OpenJS.NodeJS.LTS JohnMacFarlane.Pandoc
+```
 
 ---
 
 ## Quick start
 
-**Windows (easiest):** double-click **`start.bat`**. The first run installs
-dependencies (a few minutes), then every run builds the app and opens it in your
-browser.
-
-**Or from a terminal:**
-
 ```bash
-npm install     # first time only
-npm start       # builds the UI, starts the server, opens the browser
+git clone https://github.com/bytesizedbooksmith/byte-sized-book-formatter.git
+cd byte-sized-book-formatter
+npm install
+npx puppeteer browsers install chrome
+npm start
 ```
+
+`npm start` builds the UI, starts the local server, and opens it in your browser.
+Nothing is uploaded anywhere — the app runs entirely on your machine.
+
+> **Why the extra Chromium step?** npm 10+ blocks package install scripts by
+> default, so Puppeteer's browser download often doesn't run. If PDF export fails
+> with a Chromium error, that command is the fix. On Windows you can also just
+> double-click **`start.bat`**, which installs dependencies on first run.
 
 Then in the app:
 
@@ -52,8 +66,10 @@ Then in the app:
 2. Pick a **theme** and edit the **book details** — the preview updates live.
 3. Manage **front & back matter** (add/remove/reorder); switch the **Preview as** a
    device (Kindle, Kobo, Phone, iPad) to see how it reflows.
-4. Under **Export (ebook)** download EPUB (KDP or Universal), Word, Markdown, or a reading
-   PDF; under **Print book (PDF)** generate a print-ready interior.
+4. Under **Export (ebook)** generate EPUB (KDP or Universal), Word, Markdown, a reading
+   PDF, or a [blues](#blues--the-markup-pdf); under **Print book (PDF)** generate a
+   print-ready interior. Files are written into your book's folder, and the panel
+   shows you where.
 
 The sidebar sections are **collapsible** — click a heading to fold it away.
 
@@ -502,11 +518,35 @@ output/            scratch for ad-hoc renders (gitignored, safe to delete)
 
 ## Troubleshooting
 
-- **"pandoc failed" / not found** — ensure `pandoc --version` works in your terminal.
-- **PDF export errors** — Puppeteer's Chromium downloads on `npm install`; re-run it
-  if the download was interrupted.
-- **EPUB "valid (builtin)"** — that's the lightweight checker; install Java for full
-  EPUBCheck. Your EPUB is still fine for upload; retailers run their own validation.
+- **"pandoc failed" / not found** — check that `pandoc --version` works in your
+  terminal, and that it reports 3.x.
+- **PDF export fails with a Chromium error** — the browser download didn't run.
+  `npx puppeteer browsers install chrome` fixes it. (npm 10+ blocks package install
+  scripts by default, so this is common on a fresh clone or a new machine.)
+- **EPUB says "valid (builtin)"** — that's the lightweight checker. For the official
+  validator, install Java and put an [EPUBCheck](https://www.w3.org/publishing/epubcheck/)
+  jar at `vendor/epubcheck/epubcheck.jar`. Your EPUB is still fine to upload either
+  way; retailers run their own validation.
+- **A note or README turned into a chapter** — books using `chapters: .` treat the
+  book folder as the chapters folder. Common sidecar names are skipped
+  automatically and anything unusual is reported as a warning; add anything else to
+  `exclude:` in `book.yaml`.
+- **"No review folder set"** — a blues needs somewhere to go. Set it from the
+  **Blues** block in the export panel, or as `blues_output:` in `book.yaml`.
+
+---
+
+## Contributing
+
+Issues and pull requests are welcome. Before opening a PR:
+
+```bash
+npm run typecheck
+npm test           # 235 checks over nine areas — see tests/README.md
+```
+
+The suite drives real Chromium renders, real Pandoc, and a real server, so it takes
+a couple of minutes. `tests/README.md` documents the conventions that keep it honest.
 
 ---
 
@@ -516,4 +556,6 @@ Released under the [MIT License](LICENSE) — free to use, modify, and
 redistribute (including commercially); just keep the copyright notice. Fork it
 and make it your own.
 
-Version history is tracked in [CHANGELOG.md](CHANGELOG.md).
+Version history is tracked in [CHANGELOG.md](CHANGELOG.md). There's also a
+[full user guide](docs/Byte-Sized-Book-Formatter-Guide.html) covering everything
+here in more depth.

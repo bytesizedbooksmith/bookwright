@@ -1,6 +1,6 @@
 {
   "name": "byte-sized-book-formatter",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Byte-Sized Book Formatter — a Markdown book formatter that turns manuscripts into publish-ready ebooks (EPUB) and print PDFs, plus DOCX & Markdown. Local web app with live preview.",
   "author": "Angie Hartwell (Byte-Sized Booksmith)",

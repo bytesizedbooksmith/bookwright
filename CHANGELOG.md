@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-09
+
+The theme of this release is **knowing which file is which.** Exports now carry the
+version of the manuscript they came from, land in a known folder instead of
+Downloads, and archive whatever they supersede. Alongside that, a new **blues**
+export for reading and marking up a draft by hand.
+
 ### Added
 - **Blues export** — a wide-margin markup PDF built to be read and annotated on a
   tablet. US Letter with a **2.5 in right margin that stays permanently blank**,
