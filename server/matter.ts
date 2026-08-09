@@ -225,6 +225,23 @@ function setOrDelete(cfg: RawConfig, key: string, value: unknown): void {
 }
 
 /**
+ * Persist where this book's exports go. Kept in book.yaml rather than an
+ * app-level setting so the destination travels with the book: move the folder to
+ * another machine and it still knows where its blues belongs, and the CLI and
+ * the web UI read the same value instead of disagreeing.
+ */
+export async function saveExportSettings(
+  bookDir: string,
+  settings: { blues_output?: string | null; exports_dir?: string | null },
+): Promise<RawConfig> {
+  const cfg = (await readConfig(bookDir)) ?? {};
+  if ("blues_output" in settings) setOrDelete(cfg, "blues_output", settings.blues_output?.replace(/\\/g, "/"));
+  if ("exports_dir" in settings) setOrDelete(cfg, "exports_dir", settings.exports_dir);
+  await writeConfig(bookDir, cfg);
+  return cfg;
+}
+
+/**
  * Persist the Book Details metadata into book.yaml, preserving the existing
  * front/back matter and chapters structure (creating them if the file is new).
  */

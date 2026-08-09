@@ -108,6 +108,13 @@ export const api = {
       body: JSON.stringify({ meta, theme, print, typography }),
     }).then((r) => json<PrintPreviewResult>(r)),
 
+  saveExportSettings: (projectId: string, bluesOutput: string) =>
+    fetch(`/api/projects/${projectId}/export-settings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ blues_output: bluesOutput }),
+    }).then((r) => json<ProjectSummary>(r)),
+
   saveTypography: (projectId: string, meta: BookMeta, typography: Typography) =>
     fetch(`/api/projects/${projectId}/typography`, {
       method: "POST",

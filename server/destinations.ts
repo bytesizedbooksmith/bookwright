@@ -100,13 +100,19 @@ function isSameArtifact(parsed: ParsedName, type: ArtifactType): boolean {
   return parsed.ext === d.ext && (parsed.variant ?? null) === d.variant;
 }
 
+export class NoBluesDestinationError extends Error {
+  readonly code = "NO_BLUES_DESTINATION";
+  constructor() {
+    // Phrased for whoever is asking: the CLI adds the --out hint itself, and the
+    // web UI offers a folder picker rather than repeating a flag at someone who
+    // never opened a terminal.
+    super("No review folder set for this book yet — the blues has nowhere to go.");
+  }
+}
+
 export function destinationFor(type: ArtifactType, dest: DestinationConfig): string {
   if (!ARTIFACTS[type].travels) return dest.exportsDir;
-  if (!dest.bluesDir) {
-    throw new Error(
-      "No blues destination configured. Set `blues_output:` in book.yaml or pass --out.",
-    );
-  }
+  if (!dest.bluesDir) throw new NoBluesDestinationError();
   return dest.bluesDir;
 }
 

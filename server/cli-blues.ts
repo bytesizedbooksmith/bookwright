@@ -15,6 +15,7 @@ import { closeBrowser } from "./pipeline/render-pdf.ts";
 import { currentRound, ensureRoundStarted, finishExport, prepareExport } from "./exporter.ts";
 import { roundWarning } from "./versioning.ts";
 import { isAppError } from "./errors.ts";
+import { NoBluesDestinationError } from "./destinations.ts";
 
 /**
  * A blues is always the first ~50 pages, per the Blues Loop SOP: fifty pages,
@@ -190,7 +191,12 @@ main()
   })
   .catch(async (e) => {
     await closeBrowser().catch(() => {});
-    if (isAppError(e)) {
+    if (e instanceof NoBluesDestinationError) {
+      console.error(
+        `\n  ${e.message}\n` +
+          `  Set \`blues_output:\` in the book's book.yaml, or pass --out <path>.\n`,
+      );
+    } else if (isAppError(e)) {
       console.error(`\n  ${e.userMessage}${e.detail ? `\n  ${e.detail}` : ""}\n`);
     } else {
       console.error(`\n  ${e instanceof Error ? e.message : String(e)}\n`);

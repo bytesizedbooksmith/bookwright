@@ -261,6 +261,8 @@ export default function App() {
                   presets={presets}
                   hasCover={project.hasCover}
                   onDisk={Boolean(project.folder) && project.source === "folder"}
+                  bluesOutput={project.bluesOutput}
+                  onSettingsSaved={setProject}
                 />
               </Collapsible>
 

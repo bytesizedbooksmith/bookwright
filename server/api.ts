@@ -31,6 +31,7 @@ import {
   readConfig,
   removeMatter,
   reorderMatter,
+  saveExportSettings,
   saveMeta,
   saveTypography,
   scaffold,
@@ -53,6 +54,7 @@ async function buildSummary(projectId: string, overrides?: Partial<BookMeta>) {
   const { book, warnings } = await loadProject(projectId, overrides);
   const info = projectInfo(projectId);
   let config: { frontmatter: string[]; backmatter: string[]; chapters: string | null } | null = null;
+  let bluesOutput: string | null = null;
   if (info.folder) {
     const cfg = await readConfig(info.folder);
     if (cfg) {
@@ -61,6 +63,7 @@ async function buildSummary(projectId: string, overrides?: Partial<BookMeta>) {
         backmatter: cfg.backmatter ?? [],
         chapters: (cfg.chapters as string) ?? null,
       };
+      bluesOutput = typeof cfg.blues_output === "string" && cfg.blues_output.trim() ? cfg.blues_output : null;
     }
   }
   const bodyChars = book.sections
@@ -79,6 +82,7 @@ async function buildSummary(projectId: string, overrides?: Partial<BookMeta>) {
     folder: info.folder,
     editable: info.editable,
     config,
+    bluesOutput,
   };
 }
 
@@ -191,6 +195,17 @@ export function registerApi(app: Express): void {
       if (!meta) throw new Error("No metadata provided.");
       const dir = await writableBookDir(req.params.id);
       await saveMeta(dir, meta);
+      res.json(await buildSummary(req.params.id));
+    }),
+  );
+
+  // Persist where this book's exports go (the blues review folder).
+  app.post("/api/projects/:id/export-settings", (req: Request, res: Response) =>
+    wrap(res, async () => {
+      const dir = await writableBookDir(req.params.id);
+      await saveExportSettings(dir, {
+        blues_output: typeof req.body?.blues_output === "string" ? req.body.blues_output.trim() : undefined,
+      });
       res.json(await buildSummary(req.params.id));
     }),
   );

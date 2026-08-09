@@ -57,6 +57,8 @@ export interface ProjectSummary {
   folder: string | null;
   editable: boolean;
   config: BookConfig | null;
+  /** `blues_output` from book.yaml — where this book's blues is written. */
+  bluesOutput: string | null;
 }
 
 export interface MatterType {
