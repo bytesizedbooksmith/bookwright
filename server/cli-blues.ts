@@ -102,6 +102,19 @@ function displayPath(p: string): string {
   return rel.startsWith("..") ? p : rel;
 }
 
+/**
+ * The source line on the cover: enough of the path to identify the book without
+ * the machine-specific prefix. Relative to the home folder when the book lives
+ * under it, otherwise the last few segments — never an absolute path anchored to
+ * one person's drive layout.
+ */
+function sourceLabel(bookDir: string): string {
+  const rel = path.relative(os.homedir(), bookDir);
+  if (!rel.startsWith("..")) return rel.replace(/\\/g, "/");
+  const parts = bookDir.replace(/\\/g, "/").split("/").filter(Boolean);
+  return parts.slice(-4).join("/");
+}
+
 async function askYesNo(message: string): Promise<boolean> {
   if (!process.stdin.isTTY) return false; // non-interactive: never silently overwrite
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -139,7 +152,7 @@ async function main(): Promise<number> {
     date: prep.date,
     round: round.round,
     maxRounds: round.maxRounds,
-    sourceLabel: path.relative(path.resolve("C:/AI Workspace"), bookDir).replace(/\\/g, "/") || bookDir,
+    sourceLabel: sourceLabel(bookDir),
     chapters: args.chapters,
     maxPages: args.pages ?? DEFAULT_PAGE_CAP,
   });
