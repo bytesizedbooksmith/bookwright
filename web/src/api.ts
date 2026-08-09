@@ -118,7 +118,18 @@ export const api = {
   export: (
     projectId: string,
     format: string,
-    opts: { preset?: string; meta: Partial<BookMeta>; theme: string; print?: PrintOptions; typography?: Typography },
+    opts: {
+      preset?: string;
+      meta: Partial<BookMeta>;
+      theme: string;
+      print?: PrintOptions;
+      typography?: Typography;
+      pages?: number;
+      newRound?: boolean;
+      note?: string;
+      /** Overwrite an existing artifact at this version, after the user confirms. */
+      force?: boolean;
+    },
   ) =>
     fetch(`/api/projects/${projectId}/export`, {
       method: "POST",
@@ -127,8 +138,15 @@ export const api = {
     }).then((r) => json<ExportResult>(r)),
 };
 
-/** Trigger a browser download from a base64 export result. */
+/**
+ * Trigger a browser download from a base64 export result. Only used when the
+ * server could NOT write the file itself — a drag-and-dropped project has no
+ * permanent folder to write to. Anything opened from a real folder is written
+ * server-side to its configured destination instead, because a browser download
+ * always lands in Downloads and no code here can change that.
+ */
 export function downloadResult(result: ExportResult): void {
+  if (!result.dataBase64 || !result.filename) return;
   const bin = atob(result.dataBase64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);

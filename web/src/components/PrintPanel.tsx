@@ -32,7 +32,15 @@ export default function PrintPanel({
   const [layouts, setLayouts] = useState<PrintLayout[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ filename: string; bytes: number; pages?: number; gutter?: number } | null>(null);
+  const [done, setDone] = useState<{
+    filename: string;
+    bytes: number;
+    pages?: number;
+    gutter?: number;
+    path?: string;
+    version?: number;
+    archived?: string[];
+  } | null>(null);
 
   const estPages = estimatePages(bodyChars, opts.trim, chapters, otherSections);
   const estGutter = opts.gutter ?? autoGutter(estPages, opts.binding);
@@ -47,14 +55,29 @@ export default function PrintPanel({
     setDone(null);
   }
 
-  async function generate() {
+  async function generate(force = false) {
     setBusy(true);
     setError(null);
     setDone(null);
     try {
-      const result = await api.export(projectId, "print", { meta, theme, print: opts, typography });
-      downloadResult(result);
-      setDone({ filename: result.filename, bytes: result.bytes, pages: result.pages, gutter: result.gutter });
+      const result = await api.export(projectId, "print", { meta, theme, print: opts, typography, force });
+      if (result.needsConfirm) {
+        setBusy(false);
+        if (window.confirm(`${result.message}\n\nRegenerate and overwrite it?`)) await generate(true);
+        return;
+      }
+      // Written server-side for folder-backed books; downloaded only when there
+      // is nowhere permanent to write to.
+      if (!result.written) downloadResult(result);
+      setDone({
+        filename: result.filename ?? "print.pdf",
+        bytes: result.bytes,
+        pages: result.pages,
+        gutter: result.gutter,
+        path: result.path,
+        version: result.version,
+        archived: result.archived,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -143,7 +166,7 @@ export default function PrintPanel({
       </button>
       <button
         disabled={busy}
-        onClick={generate}
+        onClick={() => generate()}
         className="w-full rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
       >
         {busy ? "Generating… (this takes a few seconds)" : "Generate print PDF ↓"}
@@ -153,10 +176,19 @@ export default function PrintPanel({
       {done && (
         <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700">
           {done.filename} — {formatBytes(done.bytes)}
+          {done.version !== undefined && <span className="text-slate-400"> · v{done.version}</span>}
           {done.pages != null && (
             <div className="mt-0.5 text-slate-500">
               {done.pages} pages · gutter {inchLabel(done.gutter ?? 0)} applied
             </div>
+          )}
+          {done.path && (
+            <div className="mt-0.5 break-all text-slate-500">
+              <span className="text-emerald-700">✓ written</span> → {done.path}
+            </div>
+          )}
+          {done.archived && done.archived.length > 0 && (
+            <div className="mt-0.5 text-slate-500">archived {done.archived.join(", ")}</div>
           )}
         </div>
       )}

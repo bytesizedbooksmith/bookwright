@@ -115,13 +115,33 @@ export interface ValidationReport {
 }
 
 export interface ExportResult {
-  filename: string;
-  mime: string;
-  dataBase64: string;
+  /** True when the server wrote the file itself; false means download the bytes. */
+  written?: boolean;
+  /** Set instead of a result when the artifact already exists at this version. */
+  needsConfirm?: boolean;
+  message?: string;
+
+  filename?: string;
+  mime?: string;
+  dataBase64?: string;
   bytes: number;
+  path?: string;
+  version?: number;
+  archived?: string[];
+  overwrote?: boolean;
+
   validation?: ValidationReport;
   pages?: number;
   gutter?: number;
+
+  // Blues only.
+  totalPages?: number;
+  firstChapter?: number;
+  lastChapter?: number;
+  totalChapters?: number;
+  round?: number;
+  maxRounds?: number;
+  roundWarning?: string | null;
 }
 
 export interface PrintPreviewResult {

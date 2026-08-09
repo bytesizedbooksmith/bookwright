@@ -78,6 +78,19 @@ export interface FinishResult {
   archived: string[];
   overwrote: boolean;
   version: number;
+  /** Set when nothing was written because the artifact already exists. */
+  conflictMessage?: string;
+}
+
+/**
+ * A blues only exists inside a round, so the first one starts round 1 rather
+ * than reporting "round 0" — a number on the cover that nothing else agrees
+ * with. Shared by the CLI and the web UI so they can't drift apart.
+ */
+export function ensureRoundStarted(prep: PreparedExport): void {
+  if (!prep.round && (prep.sync.file.blues_round ?? 0) === 0) {
+    prep.round = bumpRound(prep.sync.file);
+  }
 }
 
 /**
@@ -104,7 +117,7 @@ export async function finishExport(
       `${prior ? ` (written ${prior.at.slice(0, 10)})` : ""}. Regenerate?`;
     const ok = opts.confirm ? await opts.confirm(msg) : false;
     if (!ok) {
-      return { written: false, archived: [], overwrote: false, version: sync.version };
+      return { written: false, archived: [], overwrote: false, version: sync.version, conflictMessage: msg };
     }
   }
 

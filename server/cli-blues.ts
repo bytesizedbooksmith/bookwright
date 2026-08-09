@@ -12,8 +12,8 @@ import readline from "node:readline/promises";
 import { loadBook } from "./pipeline/ingest.ts";
 import { renderBlues } from "./pipeline/render-blues.ts";
 import { closeBrowser } from "./pipeline/render-pdf.ts";
-import { currentRound, finishExport, prepareExport } from "./exporter.ts";
-import { bumpRound, roundWarning } from "./versioning.ts";
+import { currentRound, ensureRoundStarted, finishExport, prepareExport } from "./exporter.ts";
+import { roundWarning } from "./versioning.ts";
 import { isAppError } from "./errors.ts";
 
 interface Args {
@@ -120,11 +120,7 @@ async function main(): Promise<number> {
 
   const prep = await prepareExport(book, bookDir, { out: args.out, newRound: args.newRound });
 
-  // A blues only exists inside a round, so the first one starts round 1 rather
-  // than reporting "round 0". --new-round moves it on from there.
-  if (!args.newRound && (prep.sync.file.blues_round ?? 0) === 0) {
-    prep.round = bumpRound(prep.sync.file);
-  }
+  ensureRoundStarted(prep);
   const round = currentRound(prep);
   const warn = prep.round ? roundWarning(prep.round) : null;
   if (warn) console.warn(`\n${warn}\n`);

@@ -260,6 +260,7 @@ export default function App() {
                   typography={typography}
                   presets={presets}
                   hasCover={project.hasCover}
+                  onDisk={Boolean(project.folder) && project.source === "folder"}
                 />
               </Collapsible>
 
