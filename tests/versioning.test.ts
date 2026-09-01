@@ -13,6 +13,7 @@ import {
   commitSync,
   countWords,
   hashChapters,
+  hashBookSource,
   metaDir,
   priorExport,
   readVersionFile,
@@ -67,6 +68,45 @@ check("one changed word DOES change the hash", hashChapters(edited) !== h1);
 const retitled = chapters.map((s, i) => (i === 0 ? { ...s, subtitle: "Something Else" } : s));
 check("a changed heading changes the hash", hashChapters(retitled) !== h1);
 check("word count matches the fixture", countWords(chapters) === facts.words, String(countWords(chapters)));
+const publicationHash = await hashBookSource(inn);
+check("publication-source hash is canonical", /^sha256:[0-9a-f]{64}$/.test(publicationHash));
+check("front matter changes the publication hash", await hashBookSource({ ...inn, sections: inn.sections.map((section, index) => index === 0 ? { ...section, markdown: `${section.markdown}\nChanged.` } : section) }) !== publicationHash);
+check("section IDs change the publication hash", await hashBookSource({ ...inn, sections: inn.sections.map((section, index) => index === 0 ? { ...section, id: `${section.id}-changed` } : section) }) !== publicationHash);
+check("metadata changes the publication hash", await hashBookSource({ ...inn, meta: { ...inn.meta, description: "A changed description" } }) !== publicationHash);
+check("typography changes the publication hash", await hashBookSource({ ...inn, typography: { ...inn.typography, fontSize: "13pt" } }) !== publicationHash);
+check("style changes the publication hash", await hashBookSource({ ...inn, styles: { ...inn.styles, journal: { color: "#123456" } } }) !== publicationHash);
+
+const assetsA = path.join(seed.root, "hash-assets-a");
+const assetsB = path.join(seed.root, "hash-assets-b");
+await fs.mkdir(assetsA, { recursive: true });
+await fs.mkdir(assetsB, { recursive: true });
+const coverA = path.join(assetsA, "cover.png");
+const coverB = path.join(assetsB, "cover.png");
+const fontA = path.join(assetsA, "body.ttf");
+const fontB = path.join(assetsB, "body.ttf");
+await Promise.all([
+  fs.writeFile(coverA, "same cover bytes"),
+  fs.writeFile(coverB, "same cover bytes"),
+  fs.writeFile(fontA, "same font bytes"),
+  fs.writeFile(fontB, "same font bytes"),
+]);
+const withAssetsA = {
+  ...inn,
+  coverPath: coverA,
+  fonts: [{ family: "Hash Test Serif", file: fontA }],
+};
+const withAssetsB = {
+  ...inn,
+  coverPath: coverB,
+  fonts: [{ family: "Hash Test Serif", file: fontB }],
+};
+const assetsHash = await hashBookSource(withAssetsA);
+check("absolute asset paths do not change the publication hash", await hashBookSource(withAssetsB) === assetsHash);
+await fs.writeFile(coverB, "changed cover bytes");
+check("cover bytes change the publication hash", await hashBookSource(withAssetsB) !== assetsHash);
+await fs.writeFile(coverB, "same cover bytes");
+await fs.writeFile(fontB, "changed font bytes");
+check("font bytes change the publication hash", await hashBookSource(withAssetsB) !== assetsHash);
 
 // ---------------------------------------------------------------- adoption
 console.log("\nAdoption of the hand-seeded file (the hash_note case)");

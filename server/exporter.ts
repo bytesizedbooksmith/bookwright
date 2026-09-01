@@ -69,6 +69,8 @@ export interface FinishOptions {
   force?: boolean; // skip the regenerate prompt
   /** Asked when the source is unchanged and this artifact already exists. */
   confirm?: (message: string) => Promise<boolean>;
+  /** Distinguishes immutable packets of one artifact, e.g. blues chapters 6–7. */
+  filenameTag?: string;
 }
 
 export interface FinishResult {
@@ -106,7 +108,7 @@ export async function finishExport(
   opts: FinishOptions = {},
 ): Promise<FinishResult> {
   const { sync, dest, date, bookDir } = prep;
-  const plan: WritePlan = await planWrite(type, dest, sync.version, date);
+  const plan: WritePlan = await planWrite(type, dest, sync.version, date, opts.filenameTag);
 
   // Regenerating the same artifact from an unchanged source is usually a
   // mistake, so it is confirmed rather than assumed.

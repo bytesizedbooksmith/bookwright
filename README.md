@@ -436,10 +436,12 @@ else is a dated snapshot of it. So the formatter keeps track of which snapshot i
 which, and never edits one.
 
 **One version number per book, shared by every format.** Before each export the
-chapter Markdown is hashed. If it changed, the version goes up; if it didn't, the
-version stays and the new file is recorded against it. Export a blues, an EPUB and a
-print PDF without touching a word in between and all three read `v6`, because they
-are all v6.
+complete publication source is hashed: chapters, front and back matter, metadata,
+typography, styles, cover, and embedded fonts. If any of it changed, the version
+goes up; if it didn't, the version stays and the new file is recorded against it.
+Export a blues, an EPUB and a print PDF without changing the source in between and
+all three read `v6`, because they are all v6. The displayed word count remains
+chapter-only.
 
 Two files in the book's `_meta/` folder hold this:
 
@@ -455,6 +457,7 @@ Two files in the book's `_meta/` folder hold this:
 {slug}_v{N}_{YYYY-MM-DD}[_{variant}].{ext}
 
 the-book_v6_2026-08-09_blues.pdf
+the-book_v6_2026-08-09_blues_chapters-6-12.pdf  ← continuation packet
 the-book_v6_2026-08-09_print.pdf
 the-book_v6_2026-08-09_kdp.epub
 the-book_v6_2026-08-09.epub          ← universal

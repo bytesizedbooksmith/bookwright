@@ -42,6 +42,7 @@ export interface VersionFile {
   source: string;
   current_version: number;
   current_source_hash: string;
+  hash_method?: string;
   blues_round: number;
   max_rounds: number;
   word_count_method?: string;
@@ -53,6 +54,7 @@ export interface VersionFile {
 }
 
 export const META_DIRNAME = "_meta";
+export const HASH_METHOD = "publication-source-v2";
 const LINEAGE_MARKER = "<!-- formatter:insert-rows-above -->";
 
 export function metaDir(bookDir: string): string {
@@ -100,6 +102,44 @@ export function hashChapters(chapters: Section[]): string {
   return `sha256:${h.digest("hex")}`;
 }
 
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => item !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right));
+    return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+/**
+ * Hash every input that can materially change a publication artifact. Chapter
+ * word counts remain chapter-only, but the version also covers front/back
+ * matter, metadata, typography, styles, cover bytes, and embedded font bytes.
+ * Absolute paths are deliberately excluded so moving a book does not mint a
+ * new version.
+ */
+export async function hashBookSource(book: Book): Promise<string> {
+  const h = crypto.createHash("sha256");
+  const sections = book.sections.map((section) => ({
+    ...section,
+    markdown: section.markdown.replace(/\r\n/g, "\n").trim(),
+  }));
+  h.update(canonicalJson({
+    method: HASH_METHOD,
+    meta: book.meta,
+    sections,
+    styles: book.styles,
+    typography: book.typography,
+    fonts: book.fonts.map(({ file, ...font }) => ({ ...font, file: path.basename(file) })),
+    cover: book.coverPath ? path.basename(book.coverPath) : null,
+  }));
+  if (book.coverPath) h.update(await fs.readFile(book.coverPath));
+  for (const font of book.fonts) h.update(await fs.readFile(font.file));
+  return `sha256:${h.digest("hex")}`;
+}
+
 /** Our canonical form: the algorithm name plus a full 64-hex digest. */
 function isCanonicalHash(v: unknown): boolean {
   return typeof v === "string" && /^sha256:[0-9a-f]{64}$/.test(v);
@@ -134,6 +174,7 @@ function seedVersionFile(book: Book, bookDir: string, hash: string, words: numbe
     source: bookDir.replace(/\\/g, "/"),
     current_version: 1,
     current_source_hash: hash,
+    hash_method: HASH_METHOD,
     blues_round: 0,
     max_rounds: 3,
     word_count_method:
@@ -173,7 +214,7 @@ export interface SyncResult {
 export async function syncVersion(book: Book, bookDir: string): Promise<SyncResult> {
   const chapters = chaptersOf(book);
   const words = countWords(chapters);
-  const hash = hashChapters(chapters);
+  const hash = await hashBookSource(book);
   const existing = await readVersionFile(bookDir);
 
   if (!existing) {
@@ -184,7 +225,7 @@ export async function syncVersion(book: Book, bookDir: string): Promise<SyncResu
   const file: VersionFile = { ...existing, history: [...(existing.history ?? [])] };
   const now = new Date().toISOString();
 
-  if (!isCanonicalHash(file.current_source_hash)) {
+  if (!isCanonicalHash(file.current_source_hash) || file.hash_method !== HASH_METHOD) {
     const version = file.current_version;
     let entry = file.history.find((e) => e.version === version);
     if (!entry) {
@@ -197,6 +238,7 @@ export async function syncVersion(book: Book, bookDir: string): Promise<SyncResu
     entry.adopted = true;
     entry.exports = entry.exports ?? [];
     file.current_source_hash = hash;
+    file.hash_method = HASH_METHOD;
     delete file.hash_note; // the note described exactly this handover; it's done
     return { file, version, entry, words, chapters: chapters.length, hash, changed: false, adopted: true, seeded: false };
   }

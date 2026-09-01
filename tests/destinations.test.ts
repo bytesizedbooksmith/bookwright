@@ -9,6 +9,7 @@ import {
   ARCHIVE_DIRNAME,
   artifactFilename,
   parseArtifactName,
+  planWrite,
   resolveDestinations,
   slugForFolder,
   type ArtifactType,
@@ -60,6 +61,21 @@ check(
 );
 const parsed = parseArtifactName(`${SLUG}_v6_2026-08-08_blues.pdf`, SLUG);
 check("   filenames parse back", parsed?.version === 6 && parsed.variant === "blues" && parsed.ext === "pdf");
+const packetName = artifactFilename(SLUG, 6, "2026-08-08", "blues", "chapters-6-7");
+const parsedPacket = parseArtifactName(packetName, SLUG);
+check(
+  "   chapter-range packets have distinct parseable names",
+  packetName === `${SLUG}_v6_2026-08-08_blues_chapters-6-7.pdf` &&
+    parsedPacket?.variant === "blues" &&
+    parsedPacket.tag === "chapters-6-7",
+  packetName,
+);
+let unsafeTagRejected = false;
+try { artifactFilename(SLUG, 6, "2026-08-08", "blues", "../unsafe"); } catch { unsafeTagRejected = true; }
+check("   unsafe artifact tags are rejected", unsafeTagRejected);
+let tagWithoutVariantRejected = false;
+try { artifactFilename(SLUG, 6, "2026-08-08", "epub-universal", "chapters-6-7"); } catch { tagWithoutVariantRejected = true; }
+check("   tags are rejected when the artifact naming scheme cannot parse them", tagWithoutVariantRejected);
 check("   a foreign file is not parsed as ours", parseArtifactName("notes.pdf", SLUG) === null);
 
 // ---------------------------------------------------------------- routing
@@ -73,6 +89,16 @@ console.log("\n9  three artifacts, no source edits between them");
 const { book } = await loadBook(bookDir);
 const prepA = await prepareExport(book, bookDir, { date: "2026-08-08" });
 const rBlues = await finishExport(prepA, "blues", Buffer.from("BLUES-v6"), { note: "round 1" });
+const rPacket = await finishExport(prepA, "blues", Buffer.from("BLUES-v6-CH6-7"), { filenameTag: "chapters-6-7" });
+check("   continuation packet is written under its distinct name", rPacket.filename === packetName, rPacket.filename);
+const packetPlan = await planWrite("blues", await resolveDestinations(bookDir), 6, "2026-08-08", "chapters-6-7");
+check("   continuation packet preserves the same-version main packet", packetPlan.toArchive.length === 0, packetPlan.toArchive.join(", "));
+const replacementPacketPlan = await planWrite("blues", await resolveDestinations(bookDir), 6, "2026-08-09", "chapters-6-7");
+check(
+  "   a later packet with the same tag archives only its predecessor",
+  replacementPacketPlan.toArchive.length === 1 && replacementPacketPlan.toArchive[0] === packetName,
+  replacementPacketPlan.toArchive.join(", "),
+);
 
 const prepB = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-08" });
 const rEpub = await finishExport(prepB, "epub-universal", Buffer.from("EPUB-v6"));
@@ -84,7 +110,7 @@ check("all three read v6", rBlues.version === 6 && rEpub.version === 6 && rPrint
 check("   all three filenames say v6", [rBlues, rEpub, rPrint].every((r) => r.filename!.includes("_v6_")));
 const vf = (await readVersionFile(bookDir))!;
 const entry6 = vf.history.find((e) => e.version === 6)!;
-check("   all three under ONE history entry", entry6.exports.length === 3, `${entry6.exports.length}`);
+check("   all four under ONE history entry", entry6.exports.length === 4, `${entry6.exports.length}`);
 check("   history did not grow", vf.history.length === 6, `${vf.history.length} entries`);
 check("   the blues went to the review folder", rBlues.path!.startsWith(path.resolve(reviewDir)));
 check("   the epub stayed with the book", rEpub.path!.includes(`${path.sep}_exports${path.sep}`));
@@ -127,7 +153,12 @@ const rBlues7 = await finishExport(prepF, "blues", Buffer.from("BLUES-v7"));
 const prepG = await prepareExport((await loadBook(bookDir)).book, bookDir, { date: "2026-08-15" });
 const rEpub7 = await finishExport(prepG, "epub-universal", Buffer.from("EPUB-v7"));
 
-check("   v6 blues was archived", rBlues7.archived.includes(`${SLUG}_v6_2026-08-08_blues.pdf`), rBlues7.archived.join(", "));
+check(
+  "   both v6 blues artifacts were archived",
+  rBlues7.archived.includes(`${SLUG}_v6_2026-08-08_blues.pdf`) &&
+    rBlues7.archived.includes(`${SLUG}_v6_2026-08-08_blues_chapters-6-7.pdf`),
+  rBlues7.archived.join(", "),
+);
 check("   v6 epub was archived", rEpub7.archived.includes(`${SLUG}_v6_2026-08-08.epub`), rEpub7.archived.join(", "));
 
 const reviewTop = (await fs.readdir(reviewDir)).filter((f) => f !== ARCHIVE_DIRNAME);
@@ -173,8 +204,8 @@ check("the previous date is archived", nextDay.archived.includes(`${SLUG}_v7_202
 const reviewTop2 = (await fs.readdir(reviewDir)).filter((f) => f !== ARCHIVE_DIRNAME);
 check("   exactly one blues at the top level", reviewTop2.length === 1 && reviewTop2[0].includes("2026-08-16"), reviewTop2.join(", "));
 check(
-  "   both older files preserved in _archive/",
-  (await fs.readdir(path.join(reviewDir, ARCHIVE_DIRNAME))).length === 2,
+  "   all older blues artifacts preserved in _archive/",
+  (await fs.readdir(path.join(reviewDir, ARCHIVE_DIRNAME))).length === 3,
   (await fs.readdir(path.join(reviewDir, ARCHIVE_DIRNAME))).join(", "),
 );
 

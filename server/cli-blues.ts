@@ -162,6 +162,7 @@ async function main(): Promise<number> {
     note: args.note ?? (prep.round ? `round ${round.round}` : undefined),
     force: args.yes,
     confirm: askYesNo,
+    filenameTag: args.chapters ? `chapters-${meta.firstChapter}-${meta.lastChapter}` : undefined,
   });
 
   if (!result.written) {

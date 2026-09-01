@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-01
+
+### Added
+- **Integrated workflow mode** — `?embedded=1&book=...` opens a specified book directly and presents a compact formatter interface for the FPS Alpha workflow app.
+- **Blues continuation packets** — chapter-range exports receive a descriptive tag such as `_blues_chapters-6-7`, so multiple packets from the same manuscript version can coexist.
+
+### Changed
+- **Publication-aware versioning** — the source hash now covers every input that can affect a publication: ordered sections, book metadata, styles, typography, cover bytes, and custom-font bytes. Machine-specific absolute asset paths remain excluded.
+- **Safe hash migration** — an existing book adopts the expanded hash at its current version once, preserving its history instead of minting a false source revision.
+
+### Fixed
+- **Same-version continuation archiving** — a tagged Blues packet archives only an older packet with the same tag. It no longer displaces the main packet or a different chapter range.
+- **Lockfile release metadata** — package and lockfile versions now agree without altering third-party dependency versions.
+
 ## [1.2.0] - 2026-08-09
 
 The theme of this release is **knowing which file is which.** Exports now carry the
@@ -126,6 +140,8 @@ generation across books.
 - **Word (.docx)**, compiled Markdown, and reading-PDF exports.
 - Theme styling system shared across preview and all exports.
 
-[Unreleased]: https://github.com/bytesizedbooksmith/byte-sized-book-formatter/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/bytesizedbooksmith/byte-sized-book-formatter/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/bytesizedbooksmith/byte-sized-book-formatter/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/bytesizedbooksmith/byte-sized-book-formatter/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/bytesizedbooksmith/byte-sized-book-formatter/releases/tag/v1.1.0
 [1.0.0]: https://github.com/bytesizedbooksmith/byte-sized-book-formatter/releases/tag/v1.0.0

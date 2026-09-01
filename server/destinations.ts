@@ -74,24 +74,27 @@ export async function resolveDestinations(bookDir: string, outOverride?: string)
 }
 
 /** `{slug}_v{N}_{YYYY-MM-DD}[_{variant}].{ext}` — version first, so name-sort is version-sort. */
-export function artifactFilename(slug: string, version: number, date: string, type: ArtifactType): string {
+export function artifactFilename(slug: string, version: number, date: string, type: ArtifactType, tag?: string): string {
   const d = ARTIFACTS[type];
-  return `${slug}_v${version}_${date}${d.variant ? `_${d.variant}` : ""}.${d.ext}`;
+  if (tag && !/^[a-z0-9-]+$/i.test(tag)) throw new Error(`Unsafe artifact tag: ${tag}`);
+  if (tag && !d.variant) throw new Error(`Artifact type ${type} does not support filename tags`);
+  return `${slug}_v${version}_${date}${d.variant ? `_${d.variant}` : ""}${tag ? `_${tag}` : ""}.${d.ext}`;
 }
 
 interface ParsedName {
   version: number;
   date: string;
   variant: string | null;
+  tag: string | null;
   ext: string;
 }
 
 /** Read one of our filenames back. Returns null for anything we didn't write. */
 export function parseArtifactName(name: string, slug: string): ParsedName | null {
   const esc = slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const m = name.match(new RegExp(`^${esc}_v(\\d+)_(\\d{4}-\\d{2}-\\d{2})(?:_([a-z0-9]+))?\\.([a-z0-9]+)$`, "i"));
+  const m = name.match(new RegExp(`^${esc}_v(\\d+)_(\\d{4}-\\d{2}-\\d{2})(?:_([a-z0-9]+))?(?:_([a-z0-9-]+))?\\.([a-z0-9]+)$`, "i"));
   if (!m) return null;
-  return { version: Number(m[1]), date: m[2], variant: m[3] ?? null, ext: m[4].toLowerCase() };
+  return { version: Number(m[1]), date: m[2], variant: m[3] ?? null, tag: m[4] ?? null, ext: m[5].toLowerCase() };
 }
 
 /** Same book, same artifact type — matched on variant AND extension, not name. */
@@ -131,9 +134,10 @@ export async function planWrite(
   dest: DestinationConfig,
   version: number,
   date: string,
+  tag?: string,
 ): Promise<WritePlan> {
   const dir = destinationFor(type, dest);
-  const filename = artifactFilename(dest.slug, version, date, type);
+  const filename = artifactFilename(dest.slug, version, date, type, tag);
   const fullPath = path.join(dir, filename);
 
   let entries: string[] = [];
@@ -155,7 +159,7 @@ export async function planWrite(
     // "which one is latest?" question this whole system exists to answer.
     // A HIGHER version is left alone: burying newer work would be worse than
     // any duplicate.
-    if (parsed.version <= version) toArchive.push(e);
+    if (parsed.version < version || (parsed.version === version && parsed.tag === (tag ?? null))) toArchive.push(e);
   }
 
   return { dir, filename, fullPath, exists: entries.includes(filename), toArchive: toArchive.sort() };

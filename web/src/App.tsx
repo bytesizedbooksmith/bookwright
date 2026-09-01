@@ -12,6 +12,7 @@ import Collapsible from "./components/Collapsible";
 import MatterManager from "./components/MatterManager";
 
 export default function App() {
+  const [embedded] = useState(() => new URLSearchParams(window.location.search).get("embedded") === "1");
   const [themes, setThemes] = useState<Theme[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
   const [matterTypes, setMatterTypes] = useState<MatterType[]>([]);
@@ -38,6 +39,14 @@ export default function App() {
     api.themes().then(setThemes).catch(() => {});
     api.presets().then(setPresets).catch(() => {});
     api.matterTypes().then(setMatterTypes).catch(() => {});
+    const bookPath = new URLSearchParams(window.location.search).get("book")?.trim();
+    if (bookPath) {
+      setBusy(true);
+      api.openFolder(bookPath)
+        .then(adopt)
+        .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+        .finally(() => setBusy(false));
+    }
   }, []);
 
   // Debounced live ebook preview whenever metadata or theme changes.
@@ -141,14 +150,14 @@ export default function App() {
       <aside className="flex w-[390px] flex-shrink-0 flex-col border-r border-slate-200 bg-white">
         <header className="border-b border-slate-200 px-5 py-4">
           <h1 className="text-lg font-bold text-slate-800">
-            Byte-Sized Book Formatter <span className="text-emerald-600">📖</span>
+            {embedded ? "Format & Export" : "Byte-Sized Book Formatter"} <span className="text-emerald-600">📖</span>
           </h1>
-          <p className="text-xs text-slate-500">Markdown → ebook · print · DOCX · PDF</p>
+          <p className="text-xs text-slate-500">{embedded ? "Primrose & Plot publishing engine" : "Markdown → ebook · print · DOCX · PDF"}</p>
         </header>
 
         <div className="flex-1 overflow-y-auto px-5">
-          <Collapsible title="Manuscript" defaultOpen>
-            <LoadPanel busy={busy} onFiles={handleFiles} onSample={handleSample} onOpenFolder={handleOpenFolder} />
+          <Collapsible title={embedded ? "Source book" : "Manuscript"} defaultOpen>
+            {!embedded && <LoadPanel busy={busy} onFiles={handleFiles} onSample={handleSample} onOpenFolder={handleOpenFolder} />}
             {error && <div className="mt-3 rounded-md bg-red-50 p-2 text-xs text-red-700">{error}</div>}
             {project && (
               <div className="mt-3 rounded-md bg-slate-50 p-2 text-xs">
